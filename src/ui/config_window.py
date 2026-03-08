@@ -1,6 +1,6 @@
-from PySide2.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
                                   QListWidgetItem, QPushButton, QLineEdit, QGroupBox, QMessageBox)
-from PySide2.QtCore import Qt
+from PySide6.QtCore import Qt
 import json
 
 from src.services.window_info import WindowInfo

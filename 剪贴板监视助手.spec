@@ -3,10 +3,10 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = [('src', 'src')]
 binaries = []
-hiddenimports = ['PySide2', 'win32clipboard', 'win32gui', 'sqlite3']
-tmp_ret = collect_all('PySide2')
+hiddenimports = ['PySide6', 'win32clipboard', 'win32gui', 'sqlite3']
+tmp_ret = collect_all('PySide6')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('shiboken2')
+tmp_ret = collect_all('shiboken6')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 

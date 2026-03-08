@@ -17,12 +17,12 @@ def build():
         "--windowed",
         "--onedir",
         "--add-data=src;src",
-        "--hidden-import=PySide2",
+        "--hidden-import=PySide6",
         "--hidden-import=win32clipboard",
         "--hidden-import=win32gui",
         "--hidden-import=sqlite3",
-        "--collect-all=PySide2",
-        "--collect-all=shiboken2",
+        "--collect-all=PySide6",
+        "--collect-all=shiboken6",
         "--noconfirm",
         "src/main.py"
     ]

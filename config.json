@@ -3,11 +3,25 @@
         "show_hide": "Ctrl+Shift+V"
     },
     "window_filters": [
-        " Chrome_WidgetWin_1",
-        " Chrome_WidgetWin_1"
+        "#32770"
     ],
     "ui": {
         "opacity": 0.9,
         "position": "right-bottom"
-    }
+    },
+    "window_capture": {
+        "enabled": true,
+        "target_window_classes": [
+            "#32770"
+        ]
+    },
+    "target_windows": [
+        {
+            "hwnd": 8521118,
+            "class_name": "CabinetWClass",
+            "title": "此电脑 - 文件资源管理器",
+            "process_id": 11072,
+            "process_name": "explorer.exe"
+        }
+    ]
 }

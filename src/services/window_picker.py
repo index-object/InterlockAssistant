@@ -1,52 +1,56 @@
 import ctypes
-from ctypes import wintypes
-import threading
-from PySide2.QtWidgets import QApplication
+import logging
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QObject, Signal, QTimer
+
+logger = logging.getLogger(__name__)
 
 
-class WindowPicker:
-    def __init__(self):
-        self._app = QApplication.instance()
-        self._hook = None
-        self._callback = None
-        self._thread = None
+class WindowPicker(QObject):
+    window_picked = Signal(dict)
     
-    def pick_window(self, callback):
-        self._callback = callback
-        
-        def mouse_proc(n_code, w_param, l_param):
-            if n_code == 0 and w_param == 0x0201:
-                class POINT(ctypes.Structure):
-                    _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
-                
-                pt = POINT.from_address(l_param)
-                hwnd = ctypes.windll.user32.WindowFromPoint(pt)
-                if hwnd:
-                    hwnd = ctypes.windll.user32.GetAncestor(hwnd, 2)
-                    class_name = self._get_class(hwnd)
-                    title = self._get_title(hwnd)
-                    if self._callback:
-                        self._callback({'class_name': class_name, 'title': title})
-                
-                ctypes.windll.user32.UnhookWindowsHookEx(self._hook)
-                return 1
+    def __init__(self):
+        super().__init__()
+        self._app = QApplication.instance()
+        self._callback = None
+        self._timer = None
+    
+    def pick_window(self, callback=None):
+        try:
+            logger.info("WindowPicker: pick_window 开始...")
+            self._callback = callback
             
-            return ctypes.windll.user32.CallNextHookEx(self._hook, n_code, w_param, l_param)
-        
-        WH_MOUSE_LL = 14
-        HOOKPROC = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
-        
-        self._hook = ctypes.windll.user32.SetWindowsHookExW(WH_MOUSE_LL, HOOKPROC(mouse_proc), None, 0)
-        
-        def run_loop():
-            msg = wintypes.MSG()
-            while self._hook:
-                ret = ctypes.windll.user32.GetMessageW(ctypes.byref(msg), None, 0, 0)
-                if ret == 0:
-                    break
-        
-        self._thread = threading.Thread(target=run_loop, daemon=True)
-        self._thread.start()
+            self._get_foreground_window()
+            
+        except Exception as e:
+            logger.error(f"WindowPicker: pick_window 失败: {e}", exc_info=True)
+    
+    def _get_foreground_window(self):
+        try:
+            hwnd = ctypes.windll.user32.GetForegroundWindow()
+            if hwnd:
+                class_name = self._get_class(hwnd)
+                title = self._get_title(hwnd)
+                pid = self._get_process_id(hwnd)
+                
+                window_data = {
+                    'hwnd': hwnd,
+                    'class_name': class_name,
+                    'title': title,
+                    'process_id': pid,
+                }
+                logger.info(f"WindowPicker: 获取前台窗口: {window_data}")
+                
+                if self._callback:
+                    self._callback(window_data)
+                self.window_picked.emit(window_data)
+        except Exception as e:
+            logger.error(f"WindowPicker: 获取前台窗口失败: {e}", exc_info=True)
+    
+    def stop(self):
+        if self._timer:
+            self._timer.stop()
+            self._timer = None
     
     def _get_class(self, hwnd):
         try:
@@ -66,3 +70,11 @@ class WindowPicker:
             return buf.value
         except:
             return ""
+    
+    def _get_process_id(self, hwnd):
+        try:
+            pid = ctypes.c_ulong()
+            ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            return pid.value
+        except:
+            return 0
