@@ -1,25 +1,23 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_submodules
 
-datas = [('src', 'src')]
-binaries = []
-hiddenimports = ['PySide6', 'win32clipboard', 'win32gui', 'sqlite3']
-tmp_ret = collect_all('PySide6')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('shiboken6')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+hiddenimports = ['PySide6', 'PySide6.QtWidgets', 'PySide6.QtCore', 'PySide6.QtGui', 'win32clipboard', 'win32gui', 'sqlite3']
+hiddenimports += collect_submodules('PySide6.QtCore')
+hiddenimports += collect_submodules('PySide6.QtWidgets')
+hiddenimports += collect_submodules('PySide6.QtGui')
+hiddenimports += collect_submodules('shiboken6')
 
 
 a = Analysis(
     ['src\\main.py'],
     pathex=[],
-    binaries=binaries,
-    datas=datas,
+    binaries=[],
+    datas=[('src', 'src'), ('config', 'config')],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['PySide6.Qt3D', 'PySide6.QtBluetooth', 'PySide6.QtCharts', 'PySide6.QtDBus', 'PySide6.QtDataVisualization', 'PySide6.QtDesigner', 'PySide6.QtGraphs', 'PySide6.QtHttpServer', 'PySide6.QtLocation', 'PySide6.QtMultimedia', 'PySide6.QtNetworkAuth', 'PySide6.QtNfc', 'PySide6.QtPdf', 'PySide6.QtPositioning', 'PySide6.QtQuick', 'PySide6.QtRemoteObjects', 'PySide6.QtScxml', 'PySide6.QtSensors', 'PySide6.QtSerialBus', 'PySide6.QtSerialPort', 'PySide6.QtSpatialAudio', 'PySide6.QtSql', 'PySide6.QtStateMachine', 'PySide6.QtWebChannel', 'PySide6.QtWebEngine', 'PySide6.QtWebSockets', 'PySide6.QtWebView', 'PySide6.QtHelp', 'PySide6.QtAxContainer'],
     noarchive=False,
     optimize=0,
 )

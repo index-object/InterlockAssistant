@@ -3,16 +3,15 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QClipboard
 
 class FloatingWindow(QWidget):
-    def __init__(self, clipboard_watcher, window_info, database_service):
+    def __init__(self, window_info, database_service):
         super().__init__()
-        self.clipboard_watcher = clipboard_watcher
         self.window_info = window_info
         self.database_service = database_service
         self.init_ui()
         self.connect_signals()
     
     def init_ui(self):
-        self.setWindowTitle("剪贴板监视")
+        self.setWindowTitle("窗口数据监控")
         self.setFixedSize(320, 220)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self.setStyleSheet("""
@@ -43,7 +42,7 @@ class FloatingWindow(QWidget):
             }
         """)
         
-        self.title_label = QLabel("等待剪贴板...")
+        self.title_label = QLabel("等待数据...")
         self.title_label.setStyleSheet("""
             QLabel {
                 font-weight: bold;
@@ -71,7 +70,7 @@ class FloatingWindow(QWidget):
         title_layout.addWidget(self.title_label, 1)
         title_layout.addWidget(self.close_btn)
         
-        self.content_label = QLabel("剪贴板内容:")
+        self.content_label = QLabel("监控数据:")
         self.content_label.setStyleSheet("QLabel { color: #7f8c8d; font-size: 12px; }")
         
         self.content_edit = QTextEdit()
@@ -118,7 +117,7 @@ class FloatingWindow(QWidget):
     
     def copy_window_title(self):
         title = self.title_label.text()
-        if title and title != "等待剪贴板...":
+        if title and title != "等待数据...":
             clipboard = QClipboard()
             clipboard.setText(title)
     
@@ -153,7 +152,7 @@ class FloatingWindow(QWidget):
         if title:
             self.title_label.setText(title)
         else:
-            self.title_label.setText("未知窗口")
+            self.title_label.setText("监控中...")
     
     def move_to_corner(self):
         from PySide6.QtWidgets import QApplication

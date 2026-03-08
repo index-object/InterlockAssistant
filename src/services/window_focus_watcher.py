@@ -20,7 +20,6 @@ class WindowFocusWatcher(QObject):
     def set_target_windows(self, class_names_or_titles):
         self._target_class_names = [name.strip().lower() for name in class_names_or_titles if name.strip()]
         self._target_titles = [name.strip().lower() for name in class_names_or_titles if name.strip()]
-        logger.info(f"设置目标窗口: {self._target_class_names}")
     
     def start(self):
         if self._hook is not None:
@@ -50,15 +49,12 @@ class WindowFocusWatcher(QObject):
                 try:
                     class_name = self._instance._get_window_class_name(hwnd)
                     title = self._instance._get_window_text(hwnd)
-                    logger.info(f"[WinEvent] 焦点变化: hwnd={hwnd}, class={class_name}, title={title[:30]}")
                     
                     if self._instance._is_target_window(class_name, title):
-                        logger.info(f"[WinEvent] 匹配目标窗口，触发信号")
+                        logger.info(f"检测到目标窗口: {title}")
                         self._instance.window_focused.emit(hwnd, class_name, title)
-                    else:
-                        logger.info(f"[WinEvent] 不匹配目标窗口")
                 except Exception as e:
-                    logger.error(f"[WinEvent] 错误: {e}")
+                    logger.error(f"窗口焦点事件处理错误: {e}")
         
         self._win_event_proc = WinEventProcType(win_event_proc)
         

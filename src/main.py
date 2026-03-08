@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from src.services.clipboard_watcher import ClipboardWatcher
+from src.services.window_data_watcher import WindowDataWatcher
 from src.services.window_info import WindowInfo
 from src.services.database_service import DatabaseService
 from src.services.hotkey_manager import HotkeyManager
@@ -27,12 +27,12 @@ from src.ui.floating_window import FloatingWindow
 from src.ui.window_detector_window import WindowDetectorWindow
 
 
-class ClipboardMonitorApp:
+class WindowMonitorApp:
     def __init__(self):
         self.app = QApplication(sys.argv)
         self.app.setQuitOnLastWindowClosed(False)
         
-        self.clipboard_watcher = ClipboardWatcher()
+        self.window_data_watcher = WindowDataWatcher()
         self.window_info = WindowInfo()
         self.database_service = DatabaseService('data/keywords.db')
         self.hotkey_manager = HotkeyManager()
@@ -43,7 +43,6 @@ class ClipboardMonitorApp:
         self.window_detector_window = None
         
         self.floating_window = FloatingWindow(
-            self.clipboard_watcher,
             self.window_info,
             self.database_service
         )
@@ -52,54 +51,58 @@ class ClipboardMonitorApp:
         self.create_tray()
         self.setup_shortcut()
         
-        self.clipboard_watcher.clipboard_changed.connect(self.on_clipboard_change)
-        self.clipboard_watcher.start()
+        self.window_data_watcher.data_changed.connect(self.on_data_change)
         
         self.window_focus_watcher.window_focused.connect(self.on_window_focus)
         
-        self.load_window_capture_config()
+        self.start_window_monitor()
         
         self.floating_window.show()
     
-    def load_window_capture_config(self):
-        try:
-            with open('config.json', 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                capture_config = config.get('window_capture', {})
-                enabled = capture_config.get('enabled', False)
-                target_classes = capture_config.get('target_window_classes', [])
-        except:
-            enabled = False
-            target_classes = []
-        
-        logger.info(f"加载窗口捕获配置: enabled={enabled}, targets={target_classes}")
-        
-        if enabled:
-            self.window_focus_watcher.set_target_windows(target_classes)
-            self.window_focus_watcher.start()
-            logger.info("窗口焦点监控已启动")
-        else:
-            self.window_focus_watcher.stop()
-            logger.info("窗口焦点监控已停止")
+    def start_window_monitor(self):
+        self.window_focus_watcher.set_target_windows(['Item Properties'])
+        self.window_focus_watcher.start()
+        logger.info("窗口焦点监控已启动")
     
     def on_window_focus(self, hwnd, class_name, window_title):
         logger.info(f"检测到焦点变化: class_name={class_name}, hwnd={hwnd}")
         logger.info(f"窗口标题: {window_title}")
         
-        captured_text = self.ui_reader.read_window_text(hwnd)
-        logger.info(f"捕获文本: {captured_text[:50] if captured_text else 'None'}...")
+        process_name = self._get_process_name(hwnd)
+        logger.info(f"进程名: {process_name}")
         
-        if captured_text:
-            title = self.window_info.get_window_title()
-            self.floating_window.update_title(f"[捕获] {title}")
-            self.floating_window.update_content(captured_text)
-            logger.info("已更新浮窗内容")
+        if self.window_data_watcher.is_target_window(window_title, process_name):
+            logger.info(f"匹配目标窗口，开始监控")
+            self.floating_window.update_title(f"[监控] {window_title}")
+            self.window_data_watcher.start_watching(hwnd)
         else:
-            logger.info("未捕获到文本")
+            logger.info(f"不匹配目标窗口，停止监控")
+            self.window_data_watcher.stop_watching()
+    
+    def _get_process_name(self, hwnd):
+        try:
+            import psutil
+            import ctypes
+            
+            pid = ctypes.c_ulong()
+            ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            
+            if pid.value:
+                process = psutil.Process(pid.value)
+                return process.name()
+        except Exception as e:
+            logger.error(f"获取进程名失败: {e}")
+        return ""
+    
+    def on_data_change(self, value):
+        logger.info(f"检测到数据变化: {value}")
+        
+        self.floating_window.update_title("Item Properties")
+        self.floating_window.update_content(value)
     
     def create_tray(self):
         self.tray = QSystemTrayIcon()
-        self.tray.setToolTip("剪贴板监视")
+        self.tray.setToolTip("窗口数据监控")
         
         pixmap = QPixmap(32, 32)
         pixmap.fill(Qt.GlobalColor.blue)
@@ -133,30 +136,11 @@ class ClipboardMonitorApp:
         )
         self.show_hide_shortcut.activated.connect(self.toggle_window)
     
-    def on_clipboard_change(self, text):
-        if not text:
-            return
-        
-        try:
-            with open('config.json', 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                filters = config.get('window_filters', [])
-        except:
-            filters = []
-        
-        title = self.window_info.get_window_title()
-        
-        if filters and not self.window_info.should_monitor(filters):
-            return
-        
-        self.floating_window.update_title(title)
-        self.floating_window.update_content(text)
-    
     def open_config(self):
         from src.ui.config_window import ConfigWindow
         config = ConfigWindow(self.database_service, self.hotkey_manager)
         if config.exec():
-            self.load_window_capture_config()
+            pass
     
     def open_window_detector(self):
         try:
@@ -178,7 +162,7 @@ class ClipboardMonitorApp:
             traceback.print_exc()
     
     def quit_app(self):
-        self.clipboard_watcher.stop()
+        self.window_data_watcher.stop_watching()
         self.window_focus_watcher.stop()
         self.app.quit()
     
@@ -187,5 +171,5 @@ class ClipboardMonitorApp:
 
 
 if __name__ == "__main__":
-    app = ClipboardMonitorApp()
+    app = WindowMonitorApp()
     app.run()

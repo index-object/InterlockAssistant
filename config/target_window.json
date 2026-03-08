@@ -1,0 +1,9 @@
+{
+  "target_window": {
+    "title": "Item Properties",
+    "process_name": "TS1131.exe",
+    "target_control": {
+      "name_pattern": "^\\s*Set Value:\\s*(.+)$"
+    }
+  }
+}
