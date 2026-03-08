@@ -4,6 +4,7 @@ from PySide2.QtCore import Qt
 import json
 
 from src.services.window_info import WindowInfo
+from src.services.window_picker import WindowPicker
 
 
 class ConfigWindow(QDialog):
@@ -29,8 +30,17 @@ class ConfigWindow(QDialog):
         hotkey_layout.addWidget(self.hotkey_edit)
         hotkey_group.setLayout(hotkey_layout)
         
-        filter_group = QGroupBox("窗口过滤")
+        filter_group = QGroupBox("窗口过滤（勾选要监控的窗口，勾选后自动捕获其文字）")
         filter_layout = QVBoxLayout()
+        
+        capture_enable_layout = QHBoxLayout()
+        capture_enable_layout.addWidget(QLabel("启用自动捕获:"))
+        self.capture_enabled_check = QPushButton("关闭")
+        self.capture_enabled_check.setCheckable(True)
+        capture_enable_layout.addWidget(self.capture_enabled_check)
+        capture_enable_layout.addStretch()
+        filter_layout.addLayout(capture_enable_layout)
+        
         self.filter_list = QListWidget()
         self.filter_list.setSelectionMode(QListWidget.MultiSelection)
         filter_layout.addWidget(self.filter_list)
@@ -77,6 +87,7 @@ class ConfigWindow(QDialog):
         self.refresh_btn.clicked.connect(self.load_window_filters)
         self.clear_filter_btn.clicked.connect(self.clear_filters)
         self.add_keyword_btn.clicked.connect(self.add_keyword)
+        self.capture_enabled_check.clicked.connect(self.toggle_capture_enabled)
     
     def load_data(self):
         self.hotkey_edit.setText(self.hotkey_manager.get_hotkey('show_hide'))
@@ -87,6 +98,19 @@ class ConfigWindow(QDialog):
             self.keyword_list.addItem(f"{kw['id']}: {kw['keyword']} - {kw.get('description', '')}")
         
         self.load_window_filters()
+        self.load_capture_config()
+    
+    def load_capture_config(self):
+        try:
+            with open('config.json', 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                capture_config = config.get('window_capture', {})
+                enabled = capture_config.get('enabled', False)
+        except:
+            enabled = False
+        
+        self.capture_enabled_check.setChecked(enabled)
+        self.toggle_capture_enabled()
     
     def load_window_filters(self):
         self.filter_list.clear()
@@ -155,10 +179,10 @@ class ConfigWindow(QDialog):
                 display_text = item.data(Qt.UserRole)
                 if display_text:
                     if "(类名:" in display_text:
-                        class_name = display_text.split("(类名:")[1].rstrip(")")
+                        class_name = display_text.split("(类名:")[1].rstrip(")").strip()
                         filters.append(class_name)
                     else:
-                        filters.append(display_text)
+                        filters.append(display_text.strip())
         
         try:
             with open('config.json', 'r', encoding='utf-8') as f:
@@ -166,7 +190,19 @@ class ConfigWindow(QDialog):
         except:
             config = {}
         config['window_filters'] = filters
+        
+        config['window_capture'] = {
+            'enabled': self.capture_enabled_check.isChecked(),
+            'target_window_classes': filters
+        }
+        
         with open('config.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
         
         self.accept()
+    
+    def toggle_capture_enabled(self):
+        if self.capture_enabled_check.isChecked():
+            self.capture_enabled_check.setText("开启")
+        else:
+            self.capture_enabled_check.setText("关闭")
