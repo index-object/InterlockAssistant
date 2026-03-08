@@ -1,27 +1,1079 @@
 {
-    "hotkeys": {
-        "show_hide": "Ctrl+Shift+V"
-    },
-    "window_filters": [
-        "#32770"
-    ],
-    "ui": {
-        "opacity": 0.9,
-        "position": "right-bottom"
-    },
-    "window_capture": {
-        "enabled": true,
-        "target_window_classes": [
-            "#32770"
-        ]
-    },
-    "target_windows": [
-        {
-            "hwnd": 8521118,
-            "class_name": "CabinetWClass",
-            "title": "此电脑 - 文件资源管理器",
-            "process_id": 11072,
-            "process_name": "explorer.exe"
-        }
+  "hotkeys": {
+    "show_hide": "Ctrl+Shift+V"
+  },
+  "window_filters": [
+    "#32770"
+  ],
+  "ui": {
+    "opacity": 0.9,
+    "position": "right-bottom"
+  },
+  "window_capture": {
+    "enabled": true,
+    "target_window_classes": [
+      "#32770"
     ]
+  },
+  "target_windows": [
+    {
+      "hwnd": 8521118,
+      "class_name": "CabinetWClass",
+      "title": "此电脑 - 文件资源管理器",
+      "process_id": 11072,
+      "process_name": "explorer.exe"
+    },
+    {
+      "window_info": {
+        "hwnd": 526232,
+        "class_name": "Chrome_WidgetWin_1",
+        "title": "opencode - InterlockAssistant - Visual Studio Code",
+        "process_id": 12664,
+        "process_name": "Code.exe"
+      },
+      "control_tree": [
+        {
+          "depth": 0,
+          "control_type": "WindowControl",
+          "class_name": "WindowDetectorWindow",
+          "name": "窗口信息检测器",
+          "automation_id": "QApplication.WindowDetectorWindow",
+          "rect": {
+            "left": 553,
+            "top": 166,
+            "right": 1366,
+            "bottom": 853
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "TitleBarControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "",
+          "rect": {
+            "left": 574,
+            "top": 131,
+            "right": 1367,
+            "bottom": 166
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "MenuBarControl",
+          "class_name": "",
+          "name": "系统",
+          "automation_id": "MenuBar",
+          "rect": {
+            "left": 554,
+            "top": 137,
+            "right": 582,
+            "bottom": 165
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 3,
+          "control_type": "MenuItemControl",
+          "class_name": "",
+          "name": "系统",
+          "automation_id": "",
+          "rect": {
+            "left": 554,
+            "top": 137,
+            "right": 582,
+            "bottom": 165
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "ButtonControl",
+          "class_name": "",
+          "name": "最小化",
+          "automation_id": "",
+          "rect": {
+            "left": 1189,
+            "top": 129,
+            "right": 1249,
+            "bottom": 166
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "ButtonControl",
+          "class_name": "",
+          "name": "最大化",
+          "automation_id": "",
+          "rect": {
+            "left": 1249,
+            "top": 129,
+            "right": 1308,
+            "bottom": 166
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "ButtonControl",
+          "class_name": "",
+          "name": "关闭",
+          "automation_id": "",
+          "rect": {
+            "left": 1308,
+            "top": 129,
+            "right": 1368,
+            "bottom": 166
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "ButtonControl",
+          "class_name": "QPushButton",
+          "name": "开始选择",
+          "automation_id": "QApplication.WindowDetectorWindow.QPushButton",
+          "rect": {
+            "left": 568,
+            "top": 181,
+            "right": 715,
+            "bottom": 221
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "ButtonControl",
+          "class_name": "QPushButton",
+          "name": "刷新",
+          "automation_id": "QApplication.WindowDetectorWindow.QPushButton",
+          "rect": {
+            "left": 727,
+            "top": 181,
+            "right": 873,
+            "bottom": 221
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "ButtonControl",
+          "class_name": "QPushButton",
+          "name": "复制信息",
+          "automation_id": "QApplication.WindowDetectorWindow.QPushButton",
+          "rect": {
+            "left": 886,
+            "top": 181,
+            "right": 1033,
+            "bottom": 221
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "ButtonControl",
+          "class_name": "QPushButton",
+          "name": "保存目标",
+          "automation_id": "QApplication.WindowDetectorWindow.QPushButton",
+          "rect": {
+            "left": 1046,
+            "top": 181,
+            "right": 1192,
+            "bottom": 221
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "ButtonControl",
+          "class_name": "QPushButton",
+          "name": "关闭",
+          "automation_id": "QApplication.WindowDetectorWindow.QPushButton",
+          "rect": {
+            "left": 1205,
+            "top": 181,
+            "right": 1351,
+            "bottom": 221
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "TextControl",
+          "class_name": "QLabel",
+          "name": "窗口信息:",
+          "automation_id": "QApplication.WindowDetectorWindow.QLabel",
+          "rect": {
+            "left": 568,
+            "top": 233,
+            "right": 1351,
+            "bottom": 255
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "EditControl",
+          "class_name": "QTextEdit",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTextEdit",
+          "rect": {
+            "left": 568,
+            "top": 267,
+            "right": 1351,
+            "bottom": 395
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "GroupControl",
+          "class_name": "QWidget",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTextEdit.qt_scrollarea_viewport",
+          "rect": {
+            "left": 580,
+            "top": 278,
+            "right": 1325,
+            "bottom": 383
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "GroupControl",
+          "class_name": "QWidget",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTextEdit.qt_scrollarea_vcontainer",
+          "rect": {
+            "left": 1325,
+            "top": 278,
+            "right": 1340,
+            "bottom": 383
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 3,
+          "control_type": "ScrollBarControl",
+          "class_name": "QScrollBar",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTextEdit.qt_scrollarea_vcontainer.QScrollBar",
+          "rect": {
+            "left": 1325,
+            "top": 278,
+            "right": 1340,
+            "bottom": 383
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "TextControl",
+          "class_name": "QLabel",
+          "name": "输入框控件:",
+          "automation_id": "QApplication.WindowDetectorWindow.QLabel",
+          "rect": {
+            "left": 568,
+            "top": 407,
+            "right": 1351,
+            "bottom": 428
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "TreeControl",
+          "class_name": "QTreeWidget",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 568,
+            "top": 441,
+            "right": 1351,
+            "bottom": 557
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "HeaderControl",
+          "class_name": "",
+          "name": "类型",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 570,
+            "top": 442,
+            "right": 695,
+            "bottom": 472
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "HeaderControl",
+          "class_name": "",
+          "name": "类名",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 442,
+            "right": 820,
+            "bottom": 472
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "HeaderControl",
+          "class_name": "",
+          "name": "AutomationId",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 442,
+            "right": 945,
+            "bottom": 472
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "HeaderControl",
+          "class_name": "",
+          "name": "名称",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 945,
+            "top": 442,
+            "right": 1350,
+            "bottom": 472
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "DocumentControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 472,
+            "right": 695,
+            "bottom": 497
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "WebView",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 472,
+            "right": 820,
+            "bottom": 497
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 472,
+            "right": 945,
+            "bottom": 497
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 945,
+            "top": 472,
+            "right": 1350,
+            "bottom": 497
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "DocumentControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 497,
+            "right": 695,
+            "bottom": 522
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 497,
+            "right": 820,
+            "bottom": 522
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "RootWebArea",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 497,
+            "right": 945,
+            "bottom": 522
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "opencode - InterlockAssistant - Visual Studio Code",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 945,
+            "top": 497,
+            "right": 1350,
+            "bottom": 522
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "TextControl",
+          "class_name": "QLabel",
+          "name": "完整控件树:",
+          "automation_id": "QApplication.WindowDetectorWindow.QLabel",
+          "rect": {
+            "left": 568,
+            "top": 570,
+            "right": 1351,
+            "bottom": 591
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "TreeControl",
+          "class_name": "QTreeWidget",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 568,
+            "top": 603,
+            "right": 1351,
+            "bottom": 808
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "HeaderControl",
+          "class_name": "",
+          "name": "类型",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 570,
+            "top": 605,
+            "right": 695,
+            "bottom": 635
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "HeaderControl",
+          "class_name": "",
+          "name": "类名",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 605,
+            "right": 820,
+            "bottom": 635
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "HeaderControl",
+          "class_name": "",
+          "name": "名称",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 605,
+            "right": 1335,
+            "bottom": 635
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "MenuItemControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 585,
+            "right": 695,
+            "bottom": 610
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "menubar-menu-button",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 585,
+            "right": 820,
+            "bottom": 610
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "查看",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 585,
+            "right": 1335,
+            "bottom": 610
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "MenuItemControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 610,
+            "right": 695,
+            "bottom": 635
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "menubar-menu-button",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 610,
+            "right": 820,
+            "bottom": 635
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "转到",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 610,
+            "right": 1335,
+            "bottom": 635
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "MenuItemControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 635,
+            "right": 695,
+            "bottom": 660
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "menubar-menu-button",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 635,
+            "right": 820,
+            "bottom": 660
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "更多",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 635,
+            "right": 1335,
+            "bottom": 660
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "ToolBarControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 660,
+            "right": 695,
+            "bottom": 685
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "actions-container",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 660,
+            "right": 820,
+            "bottom": 685
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 660,
+            "right": 1335,
+            "bottom": 685
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "ButtonControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 685,
+            "right": 695,
+            "bottom": 710
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "action-label disabled codicon codicon-arrow-left",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 685,
+            "right": 820,
+            "bottom": 710
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "返回 (Alt+LeftArrow)",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 685,
+            "right": 1335,
+            "bottom": 710
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "GroupControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 710,
+            "right": 695,
+            "bottom": 735
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 710,
+            "right": 820,
+            "bottom": 735
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 710,
+            "right": 1335,
+            "bottom": 735
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "TextControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 735,
+            "right": 695,
+            "bottom": 762
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 735,
+            "right": 820,
+            "bottom": 762
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 735,
+            "right": 1335,
+            "bottom": 762
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "ButtonControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 762,
+            "right": 695,
+            "bottom": 787
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "action-label disabled codicon codicon-arrow-right",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 762,
+            "right": 820,
+            "bottom": 787
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "前进 (Alt+RightArrow)",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 762,
+            "right": 1335,
+            "bottom": 787
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "GroupControl",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 607,
+            "top": 787,
+            "right": 695,
+            "bottom": 812
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 695,
+            "top": 787,
+            "right": 820,
+            "bottom": 812
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 2,
+          "control_type": "TreeItemControl",
+          "class_name": "",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTreeWidget",
+          "rect": {
+            "left": 820,
+            "top": 787,
+            "right": 1335,
+            "bottom": 812
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        },
+        {
+          "depth": 1,
+          "control_type": "TextControl",
+          "class_name": "QLabel",
+          "name": "已选择窗口: opencode - InterlockAssistant ",
+          "automation_id": "QApplication.WindowDetectorWindow.QLabel",
+          "rect": {
+            "left": 568,
+            "top": 821,
+            "right": 1351,
+            "bottom": 838
+          },
+          "is_enabled": true,
+          "is_visible": null,
+          "value": ""
+        }
+      ],
+      "edit_controls": [
+        {
+          "control_type": "EditControl",
+          "class_name": "QTextEdit",
+          "name": "",
+          "automation_id": "QApplication.WindowDetectorWindow.QTextEdit",
+          "rect": {
+            "left": 568,
+            "top": 267,
+            "right": 1351,
+            "bottom": 395
+          },
+          "is_enabled": true,
+          "is_readonly": null,
+          "value": ""
+        }
+      ]
+    }
+  ]
 }
