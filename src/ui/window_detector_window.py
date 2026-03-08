@@ -196,10 +196,10 @@ class WindowDetectorWindow(QWidget):
     def start_pick(self):
         try:
             logger.info("开始选择窗口...")
-            self.status_label.setText("请切换到目标窗口，点击窗口任意位置...")
+            self.status_label.setText("请切换到目标窗口，等待1秒...")
             self.hide()
             
-            QTimer.singleShot(500, self._capture_foreground_window)
+            QTimer.singleShot(1500, self._capture_foreground_window)
             
             logger.info("pick_window 已调用")
         except Exception as e:
@@ -209,8 +209,8 @@ class WindowDetectorWindow(QWidget):
     
     def _capture_foreground_window(self):
         try:
-            self.window_picker._get_foreground_window()
-            self.show()
+            logger.info("开始捕获前台窗口...")
+            self.window_picker.pick_window(self.on_window_picked)
         except Exception as e:
             logger.error(f"捕获前台窗口失败: {e}", exc_info=True)
             self.show()

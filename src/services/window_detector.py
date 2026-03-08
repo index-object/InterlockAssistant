@@ -30,16 +30,22 @@ class WindowDetector(QObject):
     def get_control_tree(self, hwnd):
         try:
             import uiautomation as auto
-            root = auto.Control.FromHandle(hwnd)
-            if root:
-                self._control_tree = self._build_control_tree(root)
+            root = auto.WindowControl(searchDepth=1, handle=hwnd)
+            if root.Exists(0.5):
+                self._control_tree = self._build_control_tree(root, max_depth=20)
                 logger.info(f"获取到 {len(self._control_tree)} 个控件")
                 return self._control_tree
+            else:
+                root = auto.Control(handle=hwnd)
+                if root:
+                    self._control_tree = self._build_control_tree(root, max_depth=20)
+                    logger.info(f"获取到 {len(self._control_tree)} 个控件")
+                    return self._control_tree
         except Exception as e:
-            logger.error(f"获取控件树失败: {e}")
+            logger.error(f"获取控件树失败: {e}", exc_info=True)
         return []
     
-    def _build_control_tree(self, control, depth=0, max_depth=5):
+    def _build_control_tree(self, control, depth=0, max_depth=10):
         if depth > max_depth:
             return []
         
@@ -74,15 +80,18 @@ class WindowDetector(QObject):
         edit_controls = []
         try:
             import uiautomation as auto
-            root = auto.Control.FromHandle(hwnd)
+            root = auto.WindowControl(searchDepth=1, handle=hwnd)
+            if not root.Exists(0.5):
+                root = auto.Control(handle=hwnd)
             if root:
-                edit_controls = self._find_edit_controls(root)
+                edit_controls = self._find_edit_controls(root, max_depth=20)
+                logger.info(f"找到 {len(edit_controls)} 个输入框控件")
         except Exception as e:
-            logger.error(f"获取输入框控件失败: {e}")
+            logger.error(f"获取输入框控件失败: {e}", exc_info=True)
         
         return edit_controls
     
-    def _find_edit_controls(self, control, depth=0, max_depth=10):
+    def _find_edit_controls(self, control, depth=0, max_depth=15):
         if depth > max_depth:
             return []
         
