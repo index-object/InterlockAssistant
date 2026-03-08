@@ -1,18 +1,21 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QListWidget
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QClipboard
+from PySide6.QtCore import Qt, QPoint
+from PySide6.QtGui import QClipboard, QMouseEvent
+from typing import Dict
 
 class FloatingWindow(QWidget):
     def __init__(self, window_info, database_service):
         super().__init__()
         self.window_info = window_info
         self.database_service = database_service
+        self._drag_position = QPoint()
         self.init_ui()
         self.connect_signals()
     
     def init_ui(self):
         self.setWindowTitle("窗口数据监控")
-        self.setFixedSize(320, 220)
+        self.setMinimumSize(400, 350)
+        self.resize(400, 450)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self.setStyleSheet("""
             FloatingWindow {
@@ -50,6 +53,7 @@ class FloatingWindow(QWidget):
                 color: #2c3e50;
             }
         """)
+        self.title_label.setCursor(Qt.OpenHandCursor)
         
         self.close_btn = QPushButton("×")
         self.close_btn.setFixedSize(28, 28)
@@ -90,6 +94,7 @@ class FloatingWindow(QWidget):
         self.search_label.setStyleSheet("QLabel { color: #7f8c8d; font-size: 12px; }")
         
         self.result_list = QListWidget()
+        self.result_list.setMinimumHeight(200)
         self.result_list.setStyleSheet("""
             QListWidget {
                 background-color: #ecf0f1;
@@ -112,6 +117,26 @@ class FloatingWindow(QWidget):
         self.close_btn.clicked.connect(self.hide_to_tray)
         self.copy_btn.clicked.connect(self.copy_window_title)
     
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._drag_position = event.globalPosition().toPoint()
+            event.accept()
+    
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            delta = event.globalPosition().toPoint() - self._drag_position
+            self.move(self.pos() + delta)
+            self._drag_position = event.globalPosition().toPoint()
+            event.accept()
+    
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            if self.isMaximized():
+                self.showNormal()
+            else:
+                self.showMaximized()
+            event.accept()
+    
     def hide_to_tray(self):
         self.hide()
     
@@ -123,9 +148,21 @@ class FloatingWindow(QWidget):
     
     def update_content(self, text: str):
         self.content_edit.setPlainText(text[:100])
-        results = self.database_service.search(text)
+        
         self.result_list.clear()
-        if not results:
+        
+        core_id = self._extract_core_identifier(text)
+        if core_id:
+            real_tag = 'r' + core_id
+            results = self.database_service.get_all_io_real()
+            matched = [r for r in results if core_id in r.get('tag_name', '')]
+        else:
+            matched = self.database_service.search_io_real(text)
+        
+        if matched:
+            for result in matched:
+                self._add_real_result_to_list(result)
+        else:
             self.result_list.addItem("无匹配结果")
             self.result_list.setStyleSheet("""
                 QListWidget {
@@ -136,17 +173,73 @@ class FloatingWindow(QWidget):
                     color: #999;
                 }
             """)
-        else:
-            self.result_list.setStyleSheet("""
-                QListWidget {
-                    background-color: #ecf0f1;
-                    border: 1px solid #bdc3c7;
-                    border-radius: 4px;
-                    font-size: 11px;
-                }
-            """)
-            for result in results:
-                self.result_list.addItem(f"{result['keyword']} → {result.get('description', '')}")
+    
+    def _add_real_result_to_list(self, real: Dict):
+        tag_name = real.get('tag_name', '')
+        comment = real.get('comment', '')
+        eng_units = real.get('eng_units', '')
+        min_eu = real.get('min_eu', '')
+        max_eu = real.get('max_eu', '')
+        item_name = real.get('item_name', '')
+        
+        alarm_info = self._get_alarm_info(real)
+        
+        lines = []
+        lines.append(f"位号: {tag_name}")
+        if comment:
+            lines.append(f"注释: {comment}")
+        
+        unit_range = f"{eng_units}" if eng_units else ""
+        if min_eu != '' and max_eu != '':
+            unit_range = f"{eng_units} | 量程: {min_eu} ~ {max_eu}" if eng_units else f"量程: {min_eu} ~ {max_eu}"
+        elif eng_units:
+            unit_range = eng_units
+        if unit_range:
+            lines.append(unit_range)
+        
+        if alarm_info:
+            lines.append(f"报警: {alarm_info}")
+        
+        if item_name:
+            lines.append(f"访问名: {item_name}")
+        
+        self.result_list.addItem('\n'.join(lines))
+        self.result_list.setStyleSheet("""
+            QListWidget {
+                background-color: #ecf0f1;
+                border: 1px solid #bdc3c7;
+                border-radius: 4px;
+                font-size: 11px;
+            }
+            QListWidget::item {
+                padding: 4px;
+            }
+        """)
+    
+    def _get_alarm_info(self, real: Dict) -> str:
+        parts = []
+        
+        if real.get('lolo_alarm_state') == 'On':
+            val = real.get('lolo_alarm_value')
+            if val is not None:
+                parts.append(f"LoLo={val}")
+        
+        if real.get('lo_alarm_state') == 'On':
+            val = real.get('lo_alarm_value')
+            if val is not None:
+                parts.append(f"Lo={val}")
+        
+        if real.get('hi_alarm_state') == 'On':
+            val = real.get('hi_alarm_value')
+            if val is not None:
+                parts.append(f"Hi={val}")
+        
+        if real.get('hihi_alarm_state') == 'On':
+            val = real.get('hihi_alarm_value')
+            if val is not None:
+                parts.append(f"HiHi={val}")
+        
+        return " | ".join(parts)
     
     def update_title(self, title: str):
         if title:
@@ -159,5 +252,15 @@ class FloatingWindow(QWidget):
         screen = QApplication.primaryScreen()
         if screen:
             geometry = screen.availableGeometry()
-            self.move(geometry.width() - self.width() - 20, 
-                     geometry.height() - self.height() - 60)
+    
+    def _extract_core_identifier(self, tag_name: str):
+        import re
+        match = re.match(r'^[mcdg](\w+?)_(\d+[A-Z]?)(?:_.*)?$', tag_name)
+        if match:
+            return match.group(1) + '_' + match.group(2)
+        
+        match = re.match(r'^[mcdg](\w+)$', tag_name)
+        if match:
+            return match.group(1)
+        
+        return None

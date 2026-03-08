@@ -258,3 +258,41 @@ class DatabaseService:
             r['tag_type'] = 'IOReal'
         
         return disc_results + real_results
+    
+    def find_matching_io_real(self, disc_tag_name: str) -> Optional[Dict]:
+        if not disc_tag_name:
+            return None
+        
+        core_id = self._extract_core_identifier(disc_tag_name)
+        if not core_id:
+            return None
+        
+        real_tag = 'r' + core_id
+        result = self.get_io_real_by_tagname(real_tag)
+        if result:
+            return result
+        
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM io_real WHERE tag_name LIKE ?", (f'%{core_id}%',))
+        row = cursor.fetchone()
+        if row:
+            result = dict(row)
+            conn.close()
+            return result
+        
+        conn.close()
+        return None
+    
+    def _extract_core_identifier(self, tag_name: str) -> Optional[str]:
+        import re
+        match = re.match(r'^[mcdg](\w+?)_(\d+[A-Z]?)(?:_.*)?$', tag_name)
+        if match:
+            return match.group(1) + '_' + match.group(2)
+        
+        match = re.match(r'^[mcdg](\w+)$', tag_name)
+        if match:
+            return match.group(1)
+        
+        return None

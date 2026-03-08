@@ -9,6 +9,7 @@ logger = logging.getLogger()
 
 CSV_FILE = '导入数据/合成.CSV'
 DB_FILE = 'data/keywords.db'
+CSV_ENCODING = 'gbk'
 
 def clean_value(val):
     if val is None or val == '':
@@ -26,13 +27,13 @@ def parse_csv_sections():
     current_headers = []
     current_data = []
     
-    with open(CSV_FILE, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(CSV_FILE, 'r', encoding=CSV_ENCODING, errors='ignore') as f:
         reader = csv.reader(f)
         for row in reader:
-            if not row or not row[0]:
+            if not row:
                 continue
             
-            first_cell = row[0].strip()
+            first_cell = row[0].strip() if row[0] else ''
             
             if first_cell.startswith(':') and not first_cell.startswith(':"'):
                 if current_section and current_data:
@@ -42,16 +43,19 @@ def parse_csv_sections():
                     }
                 
                 current_section = first_cell[1:]
-                current_headers = [h.strip() for h in row[1:] if h.strip() and h.strip() != '']
+                current_headers = []
                 current_data = []
-            elif current_section and first_cell and not first_cell.startswith(':'):
-                values = []
-                for v in row:
-                    v = v.strip().strip('"')
-                    values.append(clean_value(v))
-                while len(values) < len(current_headers):
-                    values.append(None)
-                current_data.append(values)
+            elif current_section:
+                non_empty_cells = [cell.strip() for cell in row if cell.strip()]
+                
+                if not current_headers and non_empty_cells:
+                    header_row = [cell.strip() for cell in row]
+                    current_headers = [h for h in header_row[1:] if h]
+                elif current_headers and non_empty_cells:
+                    values = [clean_value(v.strip()) for v in row[1:]]
+                    while len(values) < len(current_headers):
+                        values.append(None)
+                    current_data.append(values)
     
     if current_section and current_data:
         sections[current_section] = {

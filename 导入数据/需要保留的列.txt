@@ -1,0 +1,2 @@
+io_disc数据中：IODisc，Comment，AccessName，ItemName
+Io_real、Io_Int数据中：IOReal/IOInt、comment、EngUnits、MinEU、MaxEU、LoLoAlarmState、LoLoAlarmValue、LoLoAlarmPri、LoAlarmState、LoAlarmValue、LoAlarmPri、HiAlarmState、HiAlarmValue、HiAlarmPri、HiHiAlarmState、HiHiAlarmValue、HiHiAlarmPri、AccessName、ItemName

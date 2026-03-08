@@ -42,6 +42,9 @@ class WindowMonitorApp:
         self.window_picker = WindowPicker()
         self.window_detector_window = None
         
+        self.test_mode = False
+        self.test_input_dialog = None
+        
         self.floating_window = FloatingWindow(
             self.window_info,
             self.database_service
@@ -111,6 +114,9 @@ class WindowMonitorApp:
         menu = QMenu()
         menu.addAction("显示/隐藏", self.toggle_window)
         menu.addAction("窗口检测器", self.open_window_detector)
+        self.test_mode_action = menu.addAction("测试模式", self.toggle_test_mode)
+        self.test_mode_action.setCheckable(True)
+        self.test_mode_action.setChecked(False)
         menu.addAction("配置", self.open_config)
         menu.addAction("退出", self.quit_app)
         self.tray.setContextMenu(menu)
@@ -160,6 +166,37 @@ class WindowMonitorApp:
             logger.error(f"打开窗口检测器失败: {e}", exc_info=True)
             import traceback
             traceback.print_exc()
+    
+    def toggle_test_mode(self):
+        self.test_mode = not self.test_mode
+        self.test_mode_action.setChecked(self.test_mode)
+        
+        if self.test_mode:
+            logger.info("测试模式已开启")
+            self.floating_window.update_title("[测试模式] 请输入测试值")
+            self.window_data_watcher.stop_watching()
+            self.window_focus_watcher.stop()
+            self.open_test_input_dialog()
+        else:
+            logger.info("测试模式已关闭")
+            self.floating_window.update_title("等待数据...")
+            self.floating_window.update_content("")
+            self.start_window_monitor()
+    
+    def open_test_input_dialog(self):
+        from src.ui.test_input_dialog import TestInputDialog
+        
+        if self.test_input_dialog is None:
+            self.test_input_dialog = TestInputDialog()
+            self.test_input_dialog.value_submitted.connect(self.on_test_value_submitted)
+        
+        self.test_input_dialog.show()
+        self.test_input_dialog.raise_()
+        self.test_input_dialog.activateWindow()
+    
+    def on_test_value_submitted(self, value):
+        logger.info(f"测试模式收到输入: {value}")
+        self.floating_window.update_content(value)
     
     def quit_app(self):
         self.window_data_watcher.stop_watching()
