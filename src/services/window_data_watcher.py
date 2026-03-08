@@ -15,7 +15,8 @@ class WindowDataWatcher(QObject):
         super().__init__()
         self._config = None
         self._current_hwnd = None
-        self._timer = None
+        self._timer = QTimer()
+        self._timer.timeout.connect(self._poll_data)
         self._last_value = None
         self._automation = None
         self._window = None
@@ -45,20 +46,14 @@ class WindowDataWatcher(QObject):
         self._current_hwnd = hwnd
         self._last_value = None
         
-        if self._timer:
-            self._timer.stop()
-        
-        self._timer = QTimer()
-        self._timer.timeout.connect(self._poll_data)
         self._timer.start(self._polling_interval)
+        logger.info(f"定时器已启动，间隔: {self._polling_interval}ms")
         
         self._poll_data()
     
     def stop_watching(self):
         logger.info("停止监控窗口")
-        if self._timer:
-            self._timer.stop()
-            self._timer = None
+        self._timer.stop()
         
         self._current_hwnd = None
         self._window = None
@@ -66,57 +61,74 @@ class WindowDataWatcher(QObject):
     
     def _poll_data(self):
         if not self._current_hwnd:
+            logger.warning("轮询数据时 hwnd 为空")
             return
         
         try:
             value = self._read_target_value()
             
-            if value and value != self._last_value:
+            if value is None:
+                logger.info("未能读取到目标值")
+            elif value != self._last_value:
                 logger.info(f"检测到数据变化: {value}")
                 self._last_value = value
                 self.data_changed.emit(value)
+            else:
+                logger.debug(f"数据未变化: {value}")
         except Exception as e:
-            logger.error(f"轮询数据失败: {e}")
+            logger.error(f"轮询数据失败: {e}", exc_info=True)
     
     def _read_target_value(self):
         try:
             import uiautomation as auto
             
+            logger.info(f"尝试读取窗口数据: hwnd={self._current_hwnd}")
             window = auto.ControlFromHandle(self._current_hwnd)
             if not window:
-                logger.debug(f"无法获取窗口控件: hwnd={self._current_hwnd}")
+                logger.info(f"无法获取窗口控件: hwnd={self._current_hwnd}")
                 return None
             
             target_config = self._config['target_window']['target_control']
-            parent_class = target_config.get('parent_class', 'QTreeWidget')
             name_pattern = target_config.get('name_pattern', r'Set Value:\s*(.+)')
             
-            tree_widget = window.Control(control_type='TreeControl', class_name=parent_class)
-            if not tree_widget:
-                logger.debug(f"未找到TreeWidget控件")
-                return None
+            logger.info("递归遍历所有控件，查找Set Value:")
+            value = self._find_value_recursive(window, name_pattern, 0)
+            if value:
+                logger.info(f"找到目标值: {value}")
+                return value
             
-            tree_items = tree_widget.GetChildren()
-            
-            for item in tree_items:
-                try:
-                    name = item.Name
-                    if name and 'Set Value:' in name:
-                        match = re.search(name_pattern, name)
-                        if match:
-                            value = match.group(1).strip()
-                            logger.debug(f"提取到值: {value}")
-                            return value
-                except Exception as e:
-                    logger.debug(f"处理TreeItem时出错: {e}")
-                    continue
-            
-            logger.debug("未找到匹配的TreeItem")
+            logger.info("未能找到目标值")
             return None
             
         except Exception as e:
-            logger.error(f"读取目标值失败: {e}")
+            logger.error(f"读取目标值失败: {e}", exc_info=True)
             return None
+    
+    def _find_value_recursive(self, control, name_pattern, depth):
+        if depth > 20:
+            return None
+        
+        try:
+            name = getattr(control, 'Name', None)
+            if name and 'Set Value:' in str(name):
+                match = re.search(name_pattern, str(name))
+                if match:
+                    logger.info(f"找到匹配项: {name}")
+                    return match.group(1).strip()
+        except Exception:
+            pass
+        
+        try:
+            children = control.GetChildren()
+            if children:
+                for child in children:
+                    result = self._find_value_recursive(child, name_pattern, depth + 1)
+                    if result:
+                        return result
+        except Exception:
+            pass
+        
+        return None
     
     def is_target_window(self, title, process_name):
         if not self._config:

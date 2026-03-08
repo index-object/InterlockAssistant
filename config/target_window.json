@@ -3,8 +3,6 @@
     "title": "Item Properties",
     "process_name": "TS1131.exe",
     "target_control": {
-      "control_type": "TreeItemControl",
-      "parent_class": "QTreeWidget",
       "name_pattern": "^\\s*Set Value:\\s*(.+)$"
     }
   }
