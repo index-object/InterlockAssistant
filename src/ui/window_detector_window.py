@@ -336,18 +336,33 @@ class WindowDetectorWindow(QWidget):
         if 'target_windows' not in config:
             config['target_windows'] = []
         
+        hwnd = self.current_window_info.get('hwnd')
+        
+        control_tree = []
+        edit_controls = []
+        if hwnd:
+            try:
+                control_tree = self.window_detector.get_control_tree(hwnd)
+                edit_controls = self.window_detector.get_edit_controls(hwnd)
+            except Exception as e:
+                logger.error(f"获取控件信息失败: {e}")
+        
         target = {
-            'hwnd': self.current_window_info.get('hwnd', 0),
-            'class_name': self.current_window_info.get('class_name', ''),
-            'title': self.current_window_info.get('title', ''),
-            'process_id': self.current_window_info.get('process_id', 0),
-            'process_name': self.current_window_info.get('process_name', ''),
+            'window_info': {
+                'hwnd': self.current_window_info.get('hwnd', 0),
+                'class_name': self.current_window_info.get('class_name', ''),
+                'title': self.current_window_info.get('title', ''),
+                'process_id': self.current_window_info.get('process_id', 0),
+                'process_name': self.current_window_info.get('process_name', ''),
+            },
+            'control_tree': control_tree,
+            'edit_controls': edit_controls,
         }
         
         config['target_windows'].append(target)
         
         with open('config.json', 'w', encoding='utf-8') as f:
-            json.dump(config, f, indent=4, ensure_ascii=False)
+            json.dump(config, f, indent=2, ensure_ascii=False)
         
-        self.status_label.setText("目标已保存")
-        QMessageBox.information(self, "保存成功", "目标窗口配置已保存到 config.json")
+        self.status_label.setText(f"已保存 (控件树:{len(control_tree)}个, 输入框:{len(edit_controls)}个)")
+        QMessageBox.information(self, "保存成功", f"目标窗口配置已保存到 config.json\n\n控件树: {len(control_tree)} 个\n输入框: {len(edit_controls)} 个")

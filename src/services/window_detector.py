@@ -56,12 +56,42 @@ class WindowDetector(QObject):
             name = control.Name if hasattr(control, 'Name') and control.Name else ''
             
             if control_type or class_name or name:
+                try:
+                    rect = control.BoundingRectangle
+                    rect_info = {
+                        'left': int(rect.left),
+                        'top': int(rect.top),
+                        'right': int(rect.right),
+                        'bottom': int(rect.bottom)
+                    }
+                except:
+                    rect_info = {}
+                
+                try:
+                    is_enabled = control.IsEnabled if hasattr(control, 'IsEnabled') else None
+                except:
+                    is_enabled = None
+                
+                try:
+                    is_visible = control.IsVisible if hasattr(control, 'IsVisible') else None
+                except:
+                    is_visible = None
+                
+                try:
+                    value = control.Value if hasattr(control, 'Value') and control.Value else ''
+                except:
+                    value = ''
+                
                 controls.append({
                     'depth': depth,
                     'control_type': control_type,
                     'class_name': class_name,
-                    'name': name[:100] if name else '',
+                    'name': name[:200] if name else '',
                     'automation_id': control.AutomationId if hasattr(control, 'AutomationId') and control.AutomationId else '',
+                    'rect': rect_info,
+                    'is_enabled': is_enabled,
+                    'is_visible': is_visible,
+                    'value': str(value)[:200] if value else '',
                 })
             
             children = control.GetChildren()
@@ -104,11 +134,41 @@ class WindowDetector(QObject):
                 name = control.Name if hasattr(control, 'Name') and control.Name else ''
                 automation_id = control.AutomationId if hasattr(control, 'AutomationId') and control.AutomationId else ''
                 
+                try:
+                    rect = control.BoundingRectangle
+                    rect_info = {
+                        'left': int(rect.left),
+                        'top': int(rect.top),
+                        'right': int(rect.right),
+                        'bottom': int(rect.bottom)
+                    }
+                except:
+                    rect_info = {}
+                
+                try:
+                    is_enabled = control.IsEnabled if hasattr(control, 'IsEnabled') else None
+                except:
+                    is_enabled = None
+                
+                try:
+                    value = control.Value if hasattr(control, 'Value') else ''
+                except:
+                    value = ''
+                
+                try:
+                    is_readonly = control.IsReadOnly if hasattr(control, 'IsReadOnly') else None
+                except:
+                    is_readonly = None
+                
                 edit_controls.append({
                     'control_type': control_type,
                     'class_name': class_name,
-                    'name': name[:100] if name else '',
+                    'name': name[:200] if name else '',
                     'automation_id': automation_id,
+                    'rect': rect_info,
+                    'is_enabled': is_enabled,
+                    'is_readonly': is_readonly,
+                    'value': str(value)[:200] if value else '',
                 })
             
             children = control.GetChildren()
