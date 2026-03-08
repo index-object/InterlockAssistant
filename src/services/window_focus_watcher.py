@@ -1,7 +1,7 @@
 import ctypes
 import logging
 from ctypes import wintypes
-from PySide2.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal
 
 logger = logging.getLogger(__name__)
 

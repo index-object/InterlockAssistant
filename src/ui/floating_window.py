@@ -1,6 +1,6 @@
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QListWidget
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QClipboard
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QListWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QClipboard
 
 class FloatingWindow(QWidget):
     def __init__(self, clipboard_watcher, window_info, database_service):
@@ -156,7 +156,7 @@ class FloatingWindow(QWidget):
             self.title_label.setText("未知窗口")
     
     def move_to_corner(self):
-        from PySide2.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication
         screen = QApplication.primaryScreen()
         if screen:
             geometry = screen.availableGeometry()

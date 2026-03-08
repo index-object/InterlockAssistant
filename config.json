@@ -3,11 +3,16 @@
         "show_hide": "Ctrl+Shift+V"
     },
     "window_filters": [
-        " Chrome_WidgetWin_1",
-        " Chrome_WidgetWin_1"
+        "#32770"
     ],
     "ui": {
         "opacity": 0.9,
         "position": "right-bottom"
+    },
+    "window_capture": {
+        "enabled": true,
+        "target_window_classes": [
+            "#32770"
+        ]
     }
 }

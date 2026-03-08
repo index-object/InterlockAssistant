@@ -1,9 +1,9 @@
 import sys
 import json
 import logging
-from PySide2.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QShortcut
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QKeySequence, QPixmap
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeySequence, QPixmap, QShortcut
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,7 +21,10 @@ from src.services.database_service import DatabaseService
 from src.services.hotkey_manager import HotkeyManager
 from src.services.window_focus_watcher import WindowFocusWatcher
 from src.services.ui_automation_reader import UIAutomationReader
+from src.services.window_detector import WindowDetector
+from src.services.window_picker import WindowPicker
 from src.ui.floating_window import FloatingWindow
+from src.ui.window_detector_window import WindowDetectorWindow
 
 
 class ClipboardMonitorApp:
@@ -35,6 +38,9 @@ class ClipboardMonitorApp:
         self.hotkey_manager = HotkeyManager()
         self.window_focus_watcher = WindowFocusWatcher()
         self.ui_reader = UIAutomationReader()
+        self.window_detector = WindowDetector()
+        self.window_picker = WindowPicker()
+        self.window_detector_window = None
         
         self.floating_window = FloatingWindow(
             self.clipboard_watcher,
@@ -96,11 +102,12 @@ class ClipboardMonitorApp:
         self.tray.setToolTip("剪贴板监视")
         
         pixmap = QPixmap(32, 32)
-        pixmap.fill(Qt.blue)
+        pixmap.fill(Qt.GlobalColor.blue)
         self.tray.setIcon(pixmap)
         
         menu = QMenu()
         menu.addAction("显示/隐藏", self.toggle_window)
+        menu.addAction("窗口检测器", self.open_window_detector)
         menu.addAction("配置", self.open_config)
         menu.addAction("退出", self.quit_app)
         self.tray.setContextMenu(menu)
@@ -109,7 +116,7 @@ class ClipboardMonitorApp:
         self.tray.show()
     
     def on_tray_activated(self, reason):
-        if reason == QSystemTrayIcon.DoubleClick:
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
             self.toggle_window()
     
     def toggle_window(self):
@@ -148,8 +155,27 @@ class ClipboardMonitorApp:
     def open_config(self):
         from src.ui.config_window import ConfigWindow
         config = ConfigWindow(self.database_service, self.hotkey_manager)
-        if config.exec_():
+        if config.exec():
             self.load_window_capture_config()
+    
+    def open_window_detector(self):
+        try:
+            logger.info("正在打开窗口检测器...")
+            if self.window_detector_window is None:
+                logger.info("创建窗口检测器实例...")
+                self.window_detector_window = WindowDetectorWindow(
+                    self.window_detector,
+                    self.window_picker
+                )
+                logger.info("窗口检测器实例创建成功")
+            logger.info("显示窗口检测器...")
+            self.window_detector_window.show()
+            self.window_detector_window.raise_()
+            logger.info("窗口检测器已显示")
+        except Exception as e:
+            logger.error(f"打开窗口检测器失败: {e}", exc_info=True)
+            import traceback
+            traceback.print_exc()
     
     def quit_app(self):
         self.clipboard_watcher.stop()
@@ -157,7 +183,7 @@ class ClipboardMonitorApp:
         self.app.quit()
     
     def run(self):
-        sys.exit(self.app.exec_())
+        sys.exit(self.app.exec())
 
 
 if __name__ == "__main__":
