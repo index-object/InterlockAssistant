@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushBu
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QClipboard, QMouseEvent
 from typing import Dict
+import os
 
 class FloatingWindow(QWidget):
     def __init__(self, window_info, database_service):
@@ -9,8 +10,27 @@ class FloatingWindow(QWidget):
         self.window_info = window_info
         self.database_service = database_service
         self._drag_position = QPoint()
+        self.access_name_map = self._load_access_name_map()
         self.init_ui()
         self.connect_signals()
+    
+    def _load_access_name_map(self) -> Dict[str, str]:
+        mapping = {}
+        map_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                                'config', 'access_name映射.txt')
+        try:
+            with open(map_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if '→' in line:
+                        parts = line.split('→')
+                        if len(parts) == 2:
+                            key = parts[0].strip()
+                            value = parts[1].strip()
+                            mapping[key] = value
+        except Exception:
+            pass
+        return mapping
     
     def init_ui(self):
         self.setWindowTitle("窗口数据监控")
@@ -163,29 +183,40 @@ class FloatingWindow(QWidget):
             for result in matched:
                 self._add_real_result_to_list(result)
         else:
-            self.result_list.addItem("无匹配结果")
-            self.result_list.setStyleSheet("""
-                QListWidget {
-                    background-color: #ecf0f1;
-                    border: 1px solid #bdc3c7;
-                    border-radius: 4px;
-                    font-size: 11px;
-                    color: #999;
-                }
-            """)
+            fuzzy_result = self.database_service.fuzzy_search_tag_name(text)
+            if fuzzy_result:
+                self._add_real_result_to_list(fuzzy_result, is_fuzzy=True)
+            else:
+                self.result_list.addItem("无匹配结果")
+                self.result_list.setStyleSheet("""
+                    QListWidget {
+                        background-color: #ecf0f1;
+                        border: 1px solid #bdc3c7;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        color: #999;
+                    }
+""")
     
-    def _add_real_result_to_list(self, real: Dict):
+    def _add_real_result_to_list(self, real: Dict, is_fuzzy: bool = False):
         tag_name = real.get('tag_name', '')
         comment = real.get('comment', '')
         eng_units = real.get('eng_units', '')
         min_eu = real.get('min_eu', '')
         max_eu = real.get('max_eu', '')
         item_name = real.get('item_name', '')
+        access_name = real.get('access_name', '')
         
         alarm_info = self._get_alarm_info(real)
         
         lines = []
-        lines.append(f"位号: {tag_name}")
+        prefix = "[模糊匹配] " if is_fuzzy else ""
+        lines.append(f"{prefix}位号: {tag_name}")
+        
+        device_name = self.access_name_map.get(access_name, '')
+        if device_name:
+            lines.append(f"装置: {device_name}")
+        
         if comment:
             lines.append(f"注释: {comment}")
         
