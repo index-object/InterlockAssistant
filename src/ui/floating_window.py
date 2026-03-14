@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                                 QPushButton, QFrame, QGridLayout, QSizePolicy, QApplication)
+                                  QPushButton, QFrame, QGridLayout, QSizePolicy, QApplication, QSlider, QLineEdit)
 from PySide6.QtCore import Qt, QPoint, QTimer
-from PySide6.QtGui import QMouseEvent, QCursor, QIcon
+from PySide6.QtGui import QMouseEvent, QCursor, QIcon, QDoubleValidator
 from typing import Dict, Optional
 import os
 import json
@@ -20,6 +20,10 @@ class FloatingWindow(QWidget):
         self.database_service = database_service
         self._drag_position = QPoint()
         self.access_name_map = self._load_config().get('access_name_mapping', {})
+        self._current_min_eu = None
+        self._current_max_eu = None
+        self._current_eng_units = ""
+        self._slider_updating = False
         self.init_ui()
         self.connect_signals()
     
@@ -160,8 +164,127 @@ class FloatingWindow(QWidget):
         self.range_label = QLabel("量程: -- ~ -- --")
         self.range_label.setStyleSheet("QLabel { font-size: 16px; color: #1E293B; font-weight: 500; }")
         
-        self.alarm_title = QLabel("报警设置:")
-        self.alarm_title.setStyleSheet("QLabel { font-size: 14px; color: #64748B; margin-top: 4px; }")
+        self.slider_container = QWidget()
+        self.slider_container.setStyleSheet("QWidget { background: transparent; }")
+        slider_main_layout = QHBoxLayout(self.slider_container)
+        slider_main_layout.setContentsMargins(0, 4, 0, 0)
+        slider_main_layout.setSpacing(8)
+        
+        slider_left_widget = QWidget()
+        slider_left_layout = QVBoxLayout(slider_left_widget)
+        slider_left_layout.setContentsMargins(0, 0, 0, 0)
+        slider_left_layout.setSpacing(2)
+        
+        value_input_container = QWidget()
+        value_input_container.setStyleSheet("QWidget { background: transparent; }")
+        value_input_layout = QHBoxLayout(value_input_container)
+        value_input_layout.setContentsMargins(0, 0, 0, 0)
+        value_input_layout.setSpacing(4)
+        
+        self.slider_value_input = QLineEdit("--")
+        self.slider_value_input.setStyleSheet("""
+            QLineEdit {
+                color: #3B82F6;
+                font-size: 12px;
+                font-weight: 600;
+                background: #F8FAFC;
+                border: 1px solid #CBD5E1;
+                border-radius: 4px;
+                padding: 2px 6px;
+                max-width: 60px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #3B82F6;
+            }
+        """)
+        self.slider_value_input.setAlignment(Qt.AlignCenter)
+        self.slider_value_input.returnPressed.connect(self._on_value_input_confirmed)
+        
+        self.slider_unit_label = QLabel("")
+        self.slider_unit_label.setStyleSheet("""
+            QLabel {
+                color: #64748B;
+                font-size: 12px;
+                font-weight: 500;
+                background: transparent;
+            }
+        """)
+        
+        value_input_layout.addStretch()
+        value_input_layout.addWidget(self.slider_value_input)
+        value_input_layout.addWidget(self.slider_unit_label)
+        value_input_layout.addStretch()
+        
+        self.value_slider = QSlider(Qt.Horizontal)
+        self.value_slider.setMinimum(0)
+        self.value_slider.setMaximum(1000)
+        self.value_slider.setValue(500)
+        self.value_slider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                height: 6px;
+                background: #E2E8F0;
+                border-radius: 3px;
+            }
+            QSlider::handle:horizontal {
+                width: 16px;
+                height: 16px;
+                background: #3B82F6;
+                border-radius: 8px;
+                margin: -5px 0;
+            }
+            QSlider::sub-page:horizontal {
+                background: #3B82F6;
+                border-radius: 3px;
+            }
+        """)
+        self.value_slider.valueChanged.connect(self._on_slider_changed)
+        
+        slider_left_layout.addWidget(value_input_container)
+        slider_left_layout.addWidget(self.value_slider)
+        
+        slider_right_widget = QWidget()
+        slider_right_layout = QVBoxLayout(slider_right_widget)
+        slider_right_layout.setContentsMargins(0, 0, 0, 0)
+        slider_right_layout.setSpacing(2)
+        
+        self.slider_code_label = QLabel("工程码: --")
+        self.slider_code_label.setStyleSheet("""
+            QLabel {
+                font-size: 11px;
+                color: #475569;
+                background-color: #F1F5F9;
+                padding: 4px 8px;
+                border-radius: 4px;
+            }
+        """)
+        
+        self.slider_code_copy_btn = QPushButton("复制")
+        self.slider_code_copy_btn.setFixedSize(36, 20)
+        self.slider_code_copy_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #3B82F6;
+                color: white;
+                font-size: 10px;
+                border-radius: 4px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #2563EB;
+            }
+            QPushButton:pressed {
+                background-color: #1D4ED8;
+            }
+        """)
+        self.slider_code_copy_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.slider_code_copy_btn.hide()
+        
+        slider_right_layout.addWidget(self.slider_code_label)
+        slider_right_layout.addWidget(self.slider_code_copy_btn, alignment=Qt.AlignRight)
+        
+        slider_main_layout.addWidget(slider_left_widget, 1)
+        slider_main_layout.addWidget(slider_right_widget)
+        
+        self.slider_container.hide()
         
         self.alarm_grid = QWidget()
         self.alarm_grid_layout = QGridLayout(self.alarm_grid)
@@ -202,7 +325,7 @@ class FloatingWindow(QWidget):
         self.result_card_layout.addWidget(self.tag_container)
         self.result_card_layout.addWidget(self.info_label)
         self.result_card_layout.addWidget(self.range_label)
-        self.result_card_layout.addWidget(self.alarm_title)
+        self.result_card_layout.addWidget(self.slider_container)
         self.result_card_layout.addWidget(self.alarm_grid)
         self.result_card_layout.addWidget(self.access_label)
         
@@ -419,6 +542,120 @@ class FloatingWindow(QWidget):
     def connect_signals(self):
         self.close_btn.clicked.connect(self.hide_to_tray)
     
+    def _on_slider_changed(self, slider_value):
+        if self._slider_updating:
+            return
+        if self._current_min_eu is None or self._current_max_eu is None:
+            return
+        
+        slider_range = self.value_slider.maximum() - self.value_slider.minimum()
+        actual_value = self._current_min_eu + (slider_value - self.value_slider.minimum()) * (self._current_max_eu - self._current_min_eu) / slider_range
+        
+        self.slider_value_input.setText(f"{actual_value:.2f}")
+        self.slider_unit_label.setText(self._current_eng_units if self._current_eng_units else "")
+        
+        engineering_code = convert_to_engineering_code(actual_value, self._current_min_eu, self._current_max_eu)
+        if engineering_code is not None:
+            self.slider_code_label.setText(f"工程码: {engineering_code}")
+            self.slider_code_copy_btn.show()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                try:
+                    self.slider_code_copy_btn.clicked.disconnect()
+                except (RuntimeError, TypeError):
+                    pass
+            self.slider_code_copy_btn.clicked.connect(
+                lambda checked=False, c=engineering_code: self._copy_to_clipboard(str(c), self.slider_code_copy_btn)
+            )
+        else:
+            self.slider_code_label.setText("工程码: --")
+            self.slider_code_copy_btn.hide()
+    
+    def _on_value_input_confirmed(self):
+        if self._current_min_eu is None or self._current_max_eu is None:
+            return
+        
+        input_text = self.slider_value_input.text().strip()
+        try:
+            value = float(input_text)
+        except ValueError:
+            mid_value = (self._current_min_eu + self._current_max_eu) / 2
+            self.slider_value_input.setText(f"{mid_value:.2f}")
+            return
+        
+        value = max(self._current_min_eu, min(self._current_max_eu, value))
+        
+        slider_range = self.value_slider.maximum() - self.value_slider.minimum()
+        slider_value = int(self.value_slider.minimum() + (value - self._current_min_eu) * slider_range / (self._current_max_eu - self._current_min_eu))
+        
+        self._slider_updating = True
+        self.value_slider.setValue(slider_value)
+        self._slider_updating = False
+        
+        self.slider_value_input.setText(f"{value:.2f}")
+        
+        engineering_code = convert_to_engineering_code(value, self._current_min_eu, self._current_max_eu)
+        if engineering_code is not None:
+            self.slider_code_label.setText(f"工程码: {engineering_code}")
+            self.slider_code_copy_btn.show()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                try:
+                    self.slider_code_copy_btn.clicked.disconnect()
+                except (RuntimeError, TypeError):
+                    pass
+            self.slider_code_copy_btn.clicked.connect(
+                lambda checked=False, c=engineering_code: self._copy_to_clipboard(str(c), self.slider_code_copy_btn)
+            )
+        else:
+            self.slider_code_label.setText("工程码: --")
+            self.slider_code_copy_btn.hide()
+    
+    def _setup_slider(self, min_eu, max_eu, eng_units):
+        try:
+            min_val = float(min_eu)
+            max_val = float(max_eu)
+        except (ValueError, TypeError):
+            self.slider_container.hide()
+            return
+        
+        if min_val >= max_val:
+            self.slider_container.hide()
+            return
+        
+        self._current_min_eu = min_val
+        self._current_max_eu = max_val
+        self._current_eng_units = eng_units if eng_units else ""
+        
+        self._slider_updating = True
+        self.value_slider.setMinimum(0)
+        self.value_slider.setMaximum(1000)
+        self.value_slider.setValue(500)
+        self._slider_updating = False
+        
+        mid_value = (min_val + max_val) / 2
+        self.slider_value_input.setText(f"{mid_value:.2f}")
+        self.slider_unit_label.setText(self._current_eng_units)
+        
+        engineering_code = convert_to_engineering_code(mid_value, min_val, max_val)
+        if engineering_code is not None:
+            self.slider_code_label.setText(f"工程码: {engineering_code}")
+            self.slider_code_copy_btn.show()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                try:
+                    self.slider_code_copy_btn.clicked.disconnect()
+                except (RuntimeError, TypeError):
+                    pass
+            self.slider_code_copy_btn.clicked.connect(
+                lambda checked=False, c=engineering_code: self._copy_to_clipboard(str(c), self.slider_code_copy_btn)
+            )
+        else:
+            self.slider_code_label.setText("工程码: --")
+            self.slider_code_copy_btn.hide()
+        
+        self.slider_container.show()
+    
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self._drag_position = event.globalPosition().toPoint()
@@ -502,10 +739,13 @@ class FloatingWindow(QWidget):
         if min_eu != '' and max_eu != '':
             unit_str = f" {eng_units}" if eng_units else ""
             self.range_label.setText(f"量程: {min_eu} ~ {max_eu}{unit_str}")
+            self._setup_slider(min_eu, max_eu, eng_units)
         elif eng_units:
             self.range_label.setText(f"单位: {eng_units}")
+            self.slider_container.hide()
         else:
             self.range_label.setText("量程: --")
+            self.slider_container.hide()
         
         hihi_state = real.get('hihi_alarm_state')
         hi_state = real.get('hi_alarm_state')
