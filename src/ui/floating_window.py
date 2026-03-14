@@ -111,6 +111,12 @@ class FloatingWindow(QWidget):
         self.result_card_layout.setContentsMargins(8, 8, 8, 8)
         self.result_card_layout.setSpacing(4)
         
+        self.tag_container = QWidget()
+        self.tag_container.setStyleSheet("QWidget { background: transparent; }")
+        tag_layout = QHBoxLayout(self.tag_container)
+        tag_layout.setContentsMargins(0, 0, 0, 0)
+        tag_layout.setSpacing(8)
+        
         self.tag_label = QLabel("--")
         self.tag_label.setStyleSheet("""
             QLabel {
@@ -119,6 +125,29 @@ class FloatingWindow(QWidget):
                 color: #2563EB;
             }
         """)
+        
+        self.tag_copy_btn = QPushButton("复制")
+        self.tag_copy_btn.setFixedSize(40, 22)
+        self.tag_copy_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #3B82F6;
+                color: white;
+                font-size: 10px;
+                border-radius: 4px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #2563EB;
+            }
+            QPushButton:pressed {
+                background-color: #1D4ED8;
+            }
+        """)
+        self.tag_copy_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.tag_copy_btn.hide()
+        
+        tag_layout.addWidget(self.tag_label, 1)
+        tag_layout.addWidget(self.tag_copy_btn)
         
         self.info_label = QLabel("")
         self.info_label.setStyleSheet("QLabel { font-size: 12px; color: #64748B; }")
@@ -166,7 +195,7 @@ class FloatingWindow(QWidget):
         self.access_label = QLabel("访问名: --")
         self.access_label.setStyleSheet("QLabel { font-size: 12px; color: #94A3B8; margin-top: 4px; }")
         
-        self.result_card_layout.addWidget(self.tag_label)
+        self.result_card_layout.addWidget(self.tag_container)
         self.result_card_layout.addWidget(self.info_label)
         self.result_card_layout.addWidget(self.range_label)
         self.result_card_layout.addWidget(self.alarm_title)
@@ -444,6 +473,16 @@ class FloatingWindow(QWidget):
         
         prefix = "[模糊] " if is_fuzzy else ""
         self.tag_label.setText(f"{prefix}{tag_name}" if tag_name else "--")
+        
+        if tag_name:
+            self.tag_copy_btn.show()
+            try:
+                self.tag_copy_btn.clicked.disconnect()
+            except RuntimeError:
+                pass
+            self.tag_copy_btn.clicked.connect(lambda checked=False, t=tag_name: self._copy_to_clipboard(t, self.tag_copy_btn))
+        else:
+            self.tag_copy_btn.hide()
         
         info_parts = []
         device_name = self.access_name_map.get(access_name, '')
