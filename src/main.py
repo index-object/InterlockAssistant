@@ -1,7 +1,7 @@
 import sys
 import json
 import logging
-from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QFileDialog
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QPixmap, QShortcut
 
@@ -118,6 +118,7 @@ class WindowMonitorApp:
         self.test_mode_action.setCheckable(True)
         self.test_mode_action.setChecked(False)
         menu.addAction("配置", self.open_config)
+        menu.addAction("导入IO数据", self.import_io_data)
         menu.addAction("退出", self.quit_app)
         self.tray.setContextMenu(menu)
         
@@ -147,6 +148,49 @@ class WindowMonitorApp:
         config = ConfigWindow(self.database_service, self.hotkey_manager)
         if config.exec():
             pass
+
+    def import_io_data(self):
+        files, _ = QFileDialog.getOpenFileNames(
+            None,
+            "选择要导入的CSV文件",
+            "",
+            "CSV文件 (*.csv *.CSV);;所有文件 (*)"
+        )
+
+        if not files:
+            return
+
+        total_result = {'iodisc': 0, 'ioreal': 0, 'ioint': 0, 'ioaccess': 0, 'errors': []}
+
+        for csv_file in files:
+            try:
+                result = self.database_service.import_from_csv(csv_file, mode='replace')
+                total_result['iodisc'] += result.iodisc_count
+                total_result['ioreal'] += result.ioreal_count
+                total_result['ioint'] += result.ioint_count
+                total_result['ioaccess'] += result.ioaccess_count
+                if result.errors:
+                    total_result['errors'].extend(result.errors)
+            except Exception as e:
+                total_result['errors'].append(f"{csv_file}: {str(e)}")
+
+        if total_result['errors']:
+            self.tray.showMessage(
+                "导入失败",
+                f"错误: {', '.join(total_result['errors'][:3])}",
+                QSystemTrayIcon.MessageIcon.Critical,
+                5000
+            )
+        else:
+            self.tray.showMessage(
+                "导入完成",
+                f"IODisc: {total_result['iodisc']} 条\n"
+                f"IOReal: {total_result['ioreal']} 条\n"
+                f"IOInt: {total_result['ioint']} 条\n"
+                f"IOAccess: {total_result['ioaccess']} 条",
+                QSystemTrayIcon.MessageIcon.Information,
+                5000
+            )
     
     def open_window_detector(self):
         try:
