@@ -124,6 +124,17 @@ class DatabaseService:
         finally:
             session.close()
 
+    def _extract_core_identifier(self, tag_name: str) -> Optional[str]:
+        match = re.match(r'^[mcdg](\w+?)_(\d+[A-Z]?)(?:_.*)?$', tag_name)
+        if match:
+            return match.group(1) + '_' + match.group(2)
+
+        match = re.match(r'^[mcdg](\w+)$', tag_name)
+        if match:
+            return match.group(1)
+
+        return None
+
     def extract_core_identifier(self, tag_name: str) -> Optional[str]:
         match = re.match(r'^[mcdg](\w+?)_(\d+[A-Z]?)(?:_.*)?$', tag_name)
         if match:
@@ -134,6 +145,31 @@ class DatabaseService:
             return match.group(1)
 
         return None
+
+    def _normalize_for_comparison(self, tag_name: str) -> str:
+        """
+        标准化tag_name用于相似度比较
+        去除前缀(m/c/d/g/r)和后缀，保留核心部分
+        """
+        if not tag_name:
+            return ''
+        
+        result = tag_name.lower()
+        
+        # 去除常见前缀
+        for prefix in ['m', 'c', 'd', 'g', 'r']:
+            if result.startswith(prefix):
+                result = result[1:]
+                break
+        
+        # 去除后缀（如 _LL, _HH, _ALM 等）
+        suffixes = ['_ll', '_hh', '_alm', '_sp', '_pv', '_out']
+        for suffix in suffixes:
+            if result.endswith(suffix):
+                result = result[:-len(suffix)]
+                break
+        
+        return result
 
     def _record_to_dict(self, record) -> Dict:
         if record is None:
