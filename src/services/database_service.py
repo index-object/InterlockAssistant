@@ -164,18 +164,22 @@ class DatabaseService:
         if not tag_name:
             return ''
         
-        result = tag_name.lower()
+        result = tag_name
         
-        for prefix in ['m', 'c', 'd', 'g', 'r']:
-            if result.startswith(prefix):
+        if len(result) > 1 and result[0].isalpha():
+            second_char = result[1]
+            if second_char.isupper() or not second_char.isalpha():
                 result = result[1:]
-                break
+        
+        result = result.lower()
         
         suffixes = ['_ll', '_hh', '_alm', '_sp', '_pv', '_out']
         for suffix in suffixes:
             if result.endswith(suffix):
                 result = result[:-len(suffix)]
                 break
+        
+        result = result.replace('_', '')
         
         return result
 
@@ -219,11 +223,33 @@ class DatabaseService:
             normalized = self._normalize_for_comparison(text)
             
             if normalized:
-                pattern = f'%{normalized}%'
-                records = session.query(IOReal).filter(
-                    IOReal.tag_name.like(pattern)
-                ).limit(self.FUZZY_SEARCH_LIMIT).all()
-                candidates = [self._record_to_dict(r) for r in records]
+                parts = []
+                current_part = ''
+                for char in normalized:
+                    if char.isdigit():
+                        current_part += char
+                    else:
+                        if current_part:
+                            parts.append(current_part)
+                            current_part = ''
+                        parts.append(char)
+                if current_part:
+                    parts.append(current_part)
+                
+                search_parts = [p for p in parts if len(p) >= 2]
+                
+                if search_parts:
+                    for part in search_parts[:3]:
+                        pattern = f'%{part}%'
+                        records = session.query(IOReal).filter(
+                            IOReal.tag_name.like(pattern)
+                        ).limit(self.FUZZY_SEARCH_LIMIT // 2).all()
+                        for r in records:
+                            tag_name = r.tag_name
+                            if not any(c.get('tag_name') == tag_name for c in candidates):
+                                candidates.append(self._record_to_dict(r))
+                        if len(candidates) >= self.FUZZY_SEARCH_LIMIT:
+                            break
             
             if len(candidates) < self.FUZZY_SEARCH_LIMIT:
                 existing_tags = {c.get('tag_name') for c in candidates}

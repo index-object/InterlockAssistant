@@ -5,6 +5,7 @@ from PySide6.QtGui import QMouseEvent, QCursor, QIcon
 from typing import Dict, Optional
 import os
 import json
+import warnings
 from ..services.engineering_code import convert_to_engineering_code
 from ..utils.icon_utils import get_icon_path, get_base_path
 
@@ -306,10 +307,12 @@ class FloatingWindow(QWidget):
         if code is not None:
             widget.code_label.setText(f"工程码: {code}")
             widget.copy_btn.show()
-            try:
-                widget.copy_btn.clicked.disconnect()
-            except RuntimeError:
-                pass
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                try:
+                    widget.copy_btn.clicked.disconnect()
+                except (RuntimeError, TypeError):
+                    pass
             widget.copy_btn.clicked.connect(lambda checked=False, c=code, btn=widget.copy_btn: self._copy_to_clipboard(str(c), btn))
         else:
             widget.code_label.setText("工程码: --")
@@ -478,10 +481,12 @@ class FloatingWindow(QWidget):
         
         if tag_name:
             self.tag_copy_btn.show()
-            try:
-                self.tag_copy_btn.clicked.disconnect()
-            except RuntimeError:
-                pass
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                try:
+                    self.tag_copy_btn.clicked.disconnect()
+                except (RuntimeError, TypeError):
+                    pass
             self.tag_copy_btn.clicked.connect(lambda checked=False, t=tag_name: self._copy_to_clipboard(t, self.tag_copy_btn))
         else:
             self.tag_copy_btn.hide()

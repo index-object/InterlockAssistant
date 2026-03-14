@@ -51,10 +51,9 @@ class WindowFocusWatcher(QObject):
                     title = self._instance._get_window_text(hwnd)
                     
                     if self._instance._is_target_window(class_name, title):
-                        logger.info(f"检测到目标窗口: {title}")
                         self._instance.window_focused.emit(hwnd, class_name, title)
-                except Exception as e:
-                    logger.error(f"窗口焦点事件处理错误: {e}")
+                except Exception:
+                    pass
         
         self._win_event_proc = WinEventProcType(win_event_proc)
         

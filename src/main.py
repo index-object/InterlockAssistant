@@ -107,21 +107,14 @@ class WindowMonitorApp:
     def start_window_monitor(self):
         self.window_focus_watcher.set_target_windows(['Item Properties'])
         self.window_focus_watcher.start()
-        logger.info("窗口焦点监控已启动")
     
     def on_window_focus(self, hwnd, class_name, window_title):
-        logger.info(f"检测到焦点变化: class_name={class_name}, hwnd={hwnd}")
-        logger.info(f"窗口标题: {window_title}")
-        
         process_name = self._get_process_name(hwnd)
-        logger.info(f"进程名: {process_name}")
         
         if self.window_data_watcher.is_target_window(window_title, process_name):
-            logger.info(f"匹配目标窗口，开始监控")
             self.floating_window.update_title(f"[监控] {window_title}")
             self.window_data_watcher.start_watching(hwnd)
         else:
-            logger.info(f"不匹配目标窗口，停止监控")
             self.window_data_watcher.stop_watching()
     
     def _get_process_name(self, hwnd):
