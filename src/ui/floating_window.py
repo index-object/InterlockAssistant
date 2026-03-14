@@ -151,7 +151,7 @@ class FloatingWindow(QWidget):
         
         self.result_list.clear()
         
-        core_id = self._extract_core_identifier(text)
+        core_id = self.database_service.extract_core_identifier(text)
         if core_id:
             real_tag = 'r' + core_id
             results = self.database_service.get_all_io_real()
@@ -252,15 +252,3 @@ class FloatingWindow(QWidget):
         screen = QApplication.primaryScreen()
         if screen:
             geometry = screen.availableGeometry()
-    
-    def _extract_core_identifier(self, tag_name: str):
-        import re
-        match = re.match(r'^[mcdg](\w+?)_(\d+[A-Z]?)(?:_.*)?$', tag_name)
-        if match:
-            return match.group(1) + '_' + match.group(2)
-        
-        match = re.match(r'^[mcdg](\w+)$', tag_name)
-        if match:
-            return match.group(1)
-        
-        return None

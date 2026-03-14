@@ -124,7 +124,7 @@ class DatabaseService:
         finally:
             session.close()
 
-    def _extract_core_identifier(self, tag_name: str) -> Optional[str]:
+    def extract_core_identifier(self, tag_name: str) -> Optional[str]:
         match = re.match(r'^[mcdg](\w+?)_(\d+[A-Z]?)(?:_.*)?$', tag_name)
         if match:
             return match.group(1) + '_' + match.group(2)
