@@ -1,5 +1,6 @@
 import os
 import re
+from difflib import SequenceMatcher
 from typing import List, Dict, Optional
 from sqlalchemy import or_
 from .models import init_engine, get_session, IODisc, IOReal, IOInt, IOAccess
@@ -170,6 +171,47 @@ class DatabaseService:
                 break
         
         return result
+
+    def fuzzy_search_tag_name(self, text: str, threshold: float = 0.7) -> Optional[Dict]:
+        """
+        使用相似度算法模糊搜索tag_name
+        
+        Args:
+            text: 输入的搜索文本
+            threshold: 相似度阈值，默认0.7
+            
+        Returns:
+            相似度最高且超过阈值的结果字典，无匹配返回None
+        """
+        if not text:
+            return None
+        
+        all_records = self.get_all_io_real()
+        if not all_records:
+            return None
+        
+        normalized_input = self._normalize_for_comparison(text)
+        
+        best_match = None
+        best_ratio = threshold
+        
+        for record in all_records:
+            tag_name = record.get('tag_name', '')
+            if not tag_name:
+                continue
+            
+            normalized_tag = self._normalize_for_comparison(tag_name)
+            
+            ratio = SequenceMatcher(None, normalized_input, normalized_tag).ratio()
+            raw_ratio = SequenceMatcher(None, text.lower(), tag_name.lower()).ratio()
+            
+            final_ratio = max(ratio, raw_ratio)
+            
+            if final_ratio > best_ratio:
+                best_ratio = final_ratio
+                best_match = record
+        
+        return best_match
 
     def _record_to_dict(self, record) -> Dict:
         if record is None:
