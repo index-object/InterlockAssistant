@@ -1,23 +1,23 @@
 # SIS联锁调试助手
 
-SIS联锁调试工具，可显示剪贴板内容来源窗口，支持过滤、检索和快捷键操作。
+SIS联锁调试工具，监控窗口数据变化，支持过滤、检索和快捷键操作。
 
 ## 功能特性
 
-- 实时监控剪贴板变化（仅文本内容）
-- 显示剪贴板内容来源窗口
+- 实时监控窗口数据变化
+- 显示数据来源窗口信息
 - 置顶悬浮窗，支持快捷键显示/隐藏
 - 自定义窗口过滤（只监控指定软件）
 - SQLite数据库关键词检索
 - 系统托盘支持（最小化到托盘）
-- 复制窗口来源功能
+- 复制窗口信息功能
 - 可自定义快捷键
 
 ## 技术栈
 
-- Python 3.8
-- PySide2 5.15.2
-- pywin32
+- Python 3.12
+- PySide6
+- uiautomation
 - SQLite
 - uv (包管理)
 
@@ -28,9 +28,10 @@ InterlockAssistant/
 ├── src/
 │   ├── main.py              # 主程序入口
 │   ├── services/
-│   │   ├── clipboard_watcher.py  # 剪贴板监控
 │   │   ├── database_service.py   # 数据库服务
 │   │   ├── hotkey_manager.py     # 快捷键管理
+│   │   ├── window_data_watcher.py # 窗口数据监控
+│   │   ├── window_detector.py    # 窗口检测
 │   │   └── window_info.py        # 窗口信息获取
 │   └── ui/
 │       ├── floating_window.py    # 悬浮窗UI
@@ -74,10 +75,10 @@ uv run pytest tests/ -v
 
 ### 悬浮窗功能
 
-- 显示当前剪贴板内容来源窗口
-- 显示剪贴板文本预览
+- 显示当前数据来源窗口
+- 显示数据内容预览
 - 显示数据库检索结果
-- 点击 📋 按钮复制窗口来源
+- 点击 📋 按钮复制窗口信息
 - 点击 × 按钮最小化到托盘
 
 ### 配置窗口

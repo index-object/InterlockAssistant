@@ -23,8 +23,6 @@ def build():
         "--hidden-import=PySide6.QtWidgets",
         "--hidden-import=PySide6.QtCore",
         "--hidden-import=PySide6.QtGui",
-        "--hidden-import=win32clipboard",
-        "--hidden-import=win32gui",
         "--hidden-import=sqlite3",
         "--hidden-import=uiautomation",
         "--hidden-import=psutil",

@@ -3,7 +3,7 @@ from PyInstaller.utils.hooks import collect_submodules
 
 hiddenimports = [
     'PySide6', 'PySide6.QtWidgets', 'PySide6.QtCore', 'PySide6.QtGui',
-    'win32clipboard', 'win32gui', 'sqlite3',
+    'sqlite3',
     'uiautomation', 'psutil', 'pywinauto', 'sqlalchemy',
 ]
 hiddenimports += collect_submodules('PySide6.QtCore')
