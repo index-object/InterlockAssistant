@@ -8,14 +8,15 @@ class EngineeringCodeConverter:
         if config_path is None:
             config_path = os.path.join(
                 os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                'config', 'engineering_code.json'
+                'config', 'config.json'
             )
         self.config = self._load_config(config_path)
     
     def _load_config(self, config_path: str) -> Dict:
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                return data.get('engineering_code', {"min_code": 819, "max_code": 4095})
         except Exception:
             return {"min_code": 819, "max_code": 4095}
     

@@ -25,14 +25,15 @@ class WindowDataWatcher(QObject):
         self._load_config()
     
     def _load_config(self):
-        config_path = Path("config/target_window.json")
+        config_path = Path("config/config.json")
         if not config_path.exists():
             logger.error(f"配置文件不存在: {config_path}")
             return
         
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
-                self._config = json.load(f)
+                data = json.load(f)
+                self._config = data.get('target_window')
             logger.info(f"加载目标窗口配置: {self._config}")
         except Exception as e:
             logger.error(f"加载配置失败: {e}")
@@ -88,7 +89,7 @@ class WindowDataWatcher(QObject):
                 logger.info(f"无法获取窗口控件: hwnd={self._current_hwnd}")
                 return None
             
-            target_config = self._config['target_window']['target_control']
+            target_config = self._config.get('target_control', {})
             name_pattern = target_config.get('name_pattern', r'Set Value:\s*(.+)')
             
             logger.info("递归遍历所有控件，查找Set Value:")
@@ -134,8 +135,7 @@ class WindowDataWatcher(QObject):
         if not self._config:
             return False
         
-        target_config = self._config['target_window']
-        target_title = target_config.get('title', '')
-        target_process = target_config.get('process_name', '')
+        target_title = self._config.get('title', '')
+        target_process = self._config.get('process_name', '')
         
         return title == target_title and process_name == target_process

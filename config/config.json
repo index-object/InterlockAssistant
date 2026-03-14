@@ -1,0 +1,16 @@
+{
+    "hotkey": {
+        "show_hide": "Ctrl+Shift+V"
+    },
+    "engineering_code": {
+        "min_code": 819,
+        "max_code": 4095
+    },
+    "target_window": {
+        "title": "Item Properties",
+        "process_name": "TS1131.exe",
+        "target_control": {
+            "name_pattern": "^\\s*Set Value:\\s*(.+)$"
+        }
+    }
+}

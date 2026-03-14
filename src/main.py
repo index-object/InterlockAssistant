@@ -145,10 +145,11 @@ class WindowMonitorApp:
     
     def open_config(self):
         from src.ui.config_window import ConfigWindow
-        config = ConfigWindow(self.database_service, self.hotkey_manager)
+        config = ConfigWindow()
         if config.exec():
-            pass
-
+            self.hotkey_manager.load_config()
+            self.setup_shortcut()
+    
     def import_io_data(self):
         files, _ = QFileDialog.getOpenFileNames(
             None,

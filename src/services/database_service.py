@@ -3,7 +3,7 @@ import re
 from difflib import SequenceMatcher
 from typing import List, Dict, Optional
 from sqlalchemy import or_
-from .models import init_engine, get_session, IODisc, IOReal, IOInt, IOAccess
+from .models import init_engine, get_session, IODisc, IOReal, IOInt, IOAccess, Keyword
 from .csv_importer import CSVImporter, ImportResult
 
 
@@ -15,6 +15,11 @@ class DatabaseService:
 
     def _get_session(self):
         return get_session(self.engine)
+
+    def _record_to_dict(self, record) -> Dict:
+        if record is None:
+            return {}
+        return {c.name: getattr(record, c.name) for c in record.__table__.columns}
 
     def import_from_csv(self, csv_path: str, mode: str = 'replace') -> ImportResult:
         session = self._get_session()
@@ -148,22 +153,16 @@ class DatabaseService:
         return None
 
     def _normalize_for_comparison(self, tag_name: str) -> str:
-        """
-        标准化tag_name用于相似度比较
-        去除前缀(m/c/d/g/r)和后缀，保留核心部分
-        """
         if not tag_name:
             return ''
         
         result = tag_name.lower()
         
-        # 去除常见前缀
         for prefix in ['m', 'c', 'd', 'g', 'r']:
             if result.startswith(prefix):
                 result = result[1:]
                 break
         
-        # 去除后缀（如 _LL, _HH, _ALM 等）
         suffixes = ['_ll', '_hh', '_alm', '_sp', '_pv', '_out']
         for suffix in suffixes:
             if result.endswith(suffix):
@@ -173,16 +172,6 @@ class DatabaseService:
         return result
 
     def fuzzy_search_tag_name(self, text: str, threshold: float = 0.7) -> Optional[Dict]:
-        """
-        使用相似度算法模糊搜索tag_name
-        
-        Args:
-            text: 输入的搜索文本
-            threshold: 相似度阈值，默认0.7
-            
-        Returns:
-            相似度最高且超过阈值的结果字典，无匹配返回None
-        """
         if not text:
             return None
         
@@ -213,7 +202,33 @@ class DatabaseService:
         
         return best_match
 
-    def _record_to_dict(self, record) -> Dict:
-        if record is None:
-            return {}
-        return {c.name: getattr(record, c.name) for c in record.__table__.columns}
+    def get_all_keywords(self) -> List[Dict]:
+        session = self._get_session()
+        try:
+            records = session.query(Keyword).order_by(Keyword.id).all()
+            return [self._record_to_dict(r) for r in records]
+        finally:
+            session.close()
+
+    def add_keyword(self, keyword: str, description: str = '') -> Dict:
+        session = self._get_session()
+        try:
+            new_keyword = Keyword(keyword=keyword, description=description)
+            session.add(new_keyword)
+            session.commit()
+            session.refresh(new_keyword)
+            return self._record_to_dict(new_keyword)
+        finally:
+            session.close()
+
+    def delete_keyword(self, keyword_id: int) -> bool:
+        session = self._get_session()
+        try:
+            record = session.query(Keyword).filter(Keyword.id == keyword_id).first()
+            if record:
+                session.delete(record)
+                session.commit()
+                return True
+            return False
+        finally:
+            session.close()

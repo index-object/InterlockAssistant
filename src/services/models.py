@@ -82,6 +82,15 @@ class IOReal(Base):
     item_name = Column(String)
 
 
+class Keyword(Base):
+    __tablename__ = 'keywords'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    keyword = Column(String, nullable=False)
+    description = Column(String)
+    created_at = Column(DateTime, default=datetime.now)
+
+
 def init_engine(db_path: str):
     engine = create_engine(f'sqlite:///{db_path}')
     Base.metadata.create_all(engine)
