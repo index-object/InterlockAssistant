@@ -1,7 +1,7 @@
 [project]
-name = "interlock-assistant"
+name = "sis-interlock-assistant"
 version = "0.1.0"
-description = "Windows剪贴板监视助手"
+description = "SIS联锁调试助手"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [

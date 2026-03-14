@@ -13,11 +13,12 @@ def build():
     
     cmd = [
         "pyinstaller",
-        "--name=剪贴板监视助手",
+        "--name=SIS联锁调试助手",
         "--windowed",
         "--onedir",
-        "--add-data=src;src",
+"--add-data=src;src",
         "--add-data=config;config",
+        "--add-data=data;data",
         "--hidden-import=PySide6",
         "--hidden-import=PySide6.QtWidgets",
         "--hidden-import=PySide6.QtCore",
@@ -25,10 +26,15 @@ def build():
         "--hidden-import=win32clipboard",
         "--hidden-import=win32gui",
         "--hidden-import=sqlite3",
+        "--hidden-import=uiautomation",
+        "--hidden-import=psutil",
+        "--hidden-import=pywinauto",
+        "--hidden-import=sqlalchemy",
         "--collect-submodules=PySide6.QtCore",
         "--collect-submodules=PySide6.QtWidgets",
         "--collect-submodules=PySide6.QtGui",
         "--collect-submodules=shiboken6",
+        "--collect-submodules=sqlalchemy.dialects.sqlite",
         "--exclude-module=PySide6.Qt3D",
         "--exclude-module=PySide6.QtBluetooth",
         "--exclude-module=PySide6.QtCharts",
@@ -68,7 +74,7 @@ def build():
     if result.stderr:
         print("ERROR:", result.stderr)
     
-    print(f"\n打包完成！输出目录: {dist_dir}/剪贴板监视助手")
+    print(f"\n打包完成！输出目录: {dist_dir}/SIS联锁调试助手")
 
 if __name__ == "__main__":
     build()
