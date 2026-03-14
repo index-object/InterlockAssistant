@@ -214,32 +214,26 @@ class FloatingWindow(QWidget):
             QListWidget::item {
                 padding: 4px;
             }
-        """)
+""")
     
     def _get_alarm_info(self, real: Dict) -> str:
         parts = []
+        alarm_labels = {
+            'lolo': ('低低报', 'lolo_alarm_state', 'lolo_alarm_value'),
+            'lo': ('低报', 'lo_alarm_state', 'lo_alarm_value'),
+            'hi': ('高报', 'hi_alarm_state', 'hi_alarm_value'),
+            'hihi': ('高高报', 'hihi_alarm_state', 'hihi_alarm_value'),
+        }
         
-        if real.get('lolo_alarm_state') == 'On':
-            val = real.get('lolo_alarm_value')
-            if val is not None:
-                parts.append(f"LoLo={val}")
+        for key in ['hihi', 'hi', 'lo', 'lolo']:
+            label, state_key, value_key = alarm_labels[key]
+            state = real.get(state_key)
+            if state is not None and state != 0:
+                val = real.get(value_key)
+                if val is not None:
+                    parts.append(f"{label}: {val}")
         
-        if real.get('lo_alarm_state') == 'On':
-            val = real.get('lo_alarm_value')
-            if val is not None:
-                parts.append(f"Lo={val}")
-        
-        if real.get('hi_alarm_state') == 'On':
-            val = real.get('hi_alarm_value')
-            if val is not None:
-                parts.append(f"Hi={val}")
-        
-        if real.get('hihi_alarm_state') == 'On':
-            val = real.get('hihi_alarm_value')
-            if val is not None:
-                parts.append(f"HiHi={val}")
-        
-        return " | ".join(parts)
+        return " | ".join(parts) if parts else "无"
     
     def update_title(self, title: str):
         if title:

@@ -248,8 +248,14 @@ class CSVImporter:
             if field in result and result[field] is not None:
                 try:
                     val = result[field]
-                    if isinstance(val, str) and val.upper() in ['ON', 'OFF', 'NONE']:
-                        result[field] = 0
+                    if isinstance(val, str):
+                        val_upper = val.upper()
+                        if val_upper == 'ON':
+                            result[field] = 1
+                        elif val_upper in ['OFF', 'NONE']:
+                            result[field] = 0
+                        else:
+                            result[field] = int(val) if val else 0
                     else:
                         result[field] = int(val) if val else 0
                 except (ValueError, TypeError):
@@ -258,7 +264,8 @@ class CSVImporter:
         for field in float_fields:
             if field in result and result[field] is not None:
                 try:
-                    result[field] = float(result[field]) if result[field] else 0.0
+                    val = float(result[field]) if result[field] else 0.0
+                    result[field] = round(val, 2)
                 except (ValueError, TypeError):
                     result[field] = 0.0
 
