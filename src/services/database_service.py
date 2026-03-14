@@ -1,8 +1,8 @@
 import os
 import re
 from difflib import SequenceMatcher
-from typing import List, Dict, Optional
-from sqlalchemy import or_
+from typing import List, Dict, Optional, Union
+from sqlalchemy import or_, true
 from .models import init_engine, get_session, IODisc, IOReal, IOInt, IOAccess, Keyword
 from .csv_importer import CSVImporter, ImportResult
 
@@ -29,9 +29,13 @@ class DatabaseService:
         finally:
             session.close()
 
-    def search_io_disc(self, text: str) -> List[Dict]:
+    DEFAULT_LIMIT = 100
+    MAX_LIMIT = 1000
+
+    def search_io_disc(self, text: str, limit: Optional[int] = None) -> List[Dict]:
         if not text:
             return []
+        limit = min(limit or self.DEFAULT_LIMIT, self.MAX_LIMIT)
         session = self._get_session()
         try:
             pattern = f'%{text}%'
@@ -41,14 +45,15 @@ class DatabaseService:
                     IODisc.comment.like(pattern),
                     IODisc.item_name.like(pattern)
                 )
-            ).all()
+            ).limit(limit).all()
             return [self._record_to_dict(r) for r in records]
         finally:
             session.close()
 
-    def search_io_real(self, text: str) -> List[Dict]:
+    def search_io_real(self, text: str, limit: Optional[int] = None) -> List[Dict]:
         if not text:
             return []
+        limit = min(limit or self.DEFAULT_LIMIT, self.MAX_LIMIT)
         session = self._get_session()
         try:
             pattern = f'%{text}%'
@@ -58,23 +63,25 @@ class DatabaseService:
                     IOReal.comment.like(pattern),
                     IOReal.item_name.like(pattern)
                 )
-            ).all()
+            ).limit(limit).all()
             return [self._record_to_dict(r) for r in records]
         finally:
             session.close()
 
-    def get_all_io_disc(self) -> List[Dict]:
+    def get_all_io_disc(self, limit: Optional[int] = None, offset: int = 0) -> List[Dict]:
+        limit = min(limit or self.MAX_LIMIT, self.MAX_LIMIT)
         session = self._get_session()
         try:
-            records = session.query(IODisc).order_by(IODisc.tag_name).all()
+            records = session.query(IODisc).order_by(IODisc.tag_name).offset(offset).limit(limit).all()
             return [self._record_to_dict(r) for r in records]
         finally:
             session.close()
 
-    def get_all_io_real(self) -> List[Dict]:
+    def get_all_io_real(self, limit: Optional[int] = None, offset: int = 0) -> List[Dict]:
+        limit = min(limit or self.MAX_LIMIT, self.MAX_LIMIT)
         session = self._get_session()
         try:
-            records = session.query(IOReal).order_by(IOReal.tag_name).all()
+            records = session.query(IOReal).order_by(IOReal.tag_name).offset(offset).limit(limit).all()
             return [self._record_to_dict(r) for r in records]
         finally:
             session.close()
@@ -95,12 +102,13 @@ class DatabaseService:
         finally:
             session.close()
 
-    def search_all_io_tags(self, text: str) -> List[Dict]:
+    def search_all_io_tags(self, text: str, limit: Optional[int] = None) -> List[Dict]:
         if not text:
             return []
-
-        disc_results = self.search_io_disc(text)
-        real_results = self.search_io_real(text)
+        
+        half_limit = (limit or self.DEFAULT_LIMIT * 2) // 2
+        disc_results = self.search_io_disc(text, limit=half_limit)
+        real_results = self.search_io_real(text, limit=half_limit)
 
         for r in disc_results:
             r['tag_type'] = 'IODisc'
@@ -171,12 +179,14 @@ class DatabaseService:
         
         return result
 
+    FUZZY_SEARCH_LIMIT = 500
+
     def fuzzy_search_tag_name(self, text: str, threshold: float = 0.7) -> Optional[Dict]:
         if not text:
             return None
         
-        all_records = self.get_all_io_real()
-        if not all_records:
+        candidates = self._get_fuzzy_candidates(text)
+        if not candidates:
             return None
         
         normalized_input = self._normalize_for_comparison(text)
@@ -184,7 +194,7 @@ class DatabaseService:
         best_match = None
         best_ratio = threshold
         
-        for record in all_records:
+        for record in candidates:
             tag_name = record.get('tag_name', '')
             if not tag_name:
                 continue
@@ -202,10 +212,52 @@ class DatabaseService:
         
         return best_match
 
-    def get_all_keywords(self) -> List[Dict]:
+    def _get_fuzzy_candidates(self, text: str) -> List[Dict]:
         session = self._get_session()
         try:
-            records = session.query(Keyword).order_by(Keyword.id).all()
+            candidates = []
+            normalized = self._normalize_for_comparison(text)
+            
+            if normalized:
+                pattern = f'%{normalized}%'
+                records = session.query(IOReal).filter(
+                    IOReal.tag_name.like(pattern)
+                ).limit(self.FUZZY_SEARCH_LIMIT).all()
+                candidates = [self._record_to_dict(r) for r in records]
+            
+            if len(candidates) < self.FUZZY_SEARCH_LIMIT:
+                existing_tags = {c.get('tag_name') for c in candidates}
+                if existing_tags:
+                    extra = session.query(IOReal).filter(
+                        ~IOReal.tag_name.in_(existing_tags)
+                    ).limit(self.FUZZY_SEARCH_LIMIT - len(candidates)).all()
+                else:
+                    extra = session.query(IOReal).limit(self.FUZZY_SEARCH_LIMIT).all()
+                candidates.extend([self._record_to_dict(r) for r in extra])
+            
+            return candidates
+        finally:
+            session.close()
+
+    def search_io_real_by_core_id(self, core_id: str, limit: Optional[int] = None) -> List[Dict]:
+        if not core_id:
+            return []
+        limit = min(limit or self.DEFAULT_LIMIT, self.MAX_LIMIT)
+        session = self._get_session()
+        try:
+            pattern = f'%{core_id}%'
+            records = session.query(IOReal).filter(
+                IOReal.tag_name.like(pattern)
+            ).limit(limit).all()
+            return [self._record_to_dict(r) for r in records]
+        finally:
+            session.close()
+
+    def get_all_keywords(self, limit: Optional[int] = None) -> List[Dict]:
+        limit = min(limit or self.MAX_LIMIT, self.MAX_LIMIT)
+        session = self._get_session()
+        try:
+            records = session.query(Keyword).order_by(Keyword.id).limit(limit).all()
             return [self._record_to_dict(r) for r in records]
         finally:
             session.close()

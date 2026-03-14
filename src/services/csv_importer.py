@@ -77,17 +77,18 @@ IOREAL_IMPORT_COLUMNS = ['tag_name', 'comment', 'eng_units', 'min_eu', 'max_eu',
                          'hihi_alarm_state', 'hihi_alarm_value', 'hihi_alarm_pri',
                          'access_name', 'item_name']
 
+BATCH_SIZE = 1000
+
 
 class CSVImporter:
     def __init__(self, session: Session):
         self.session = session
         self.csv_encoding = 'gbk'
 
-    def parse_csv_sections(self, csv_path: str) -> Dict[str, Dict]:
-        sections = {}
+    def parse_csv_sections_streaming(self, csv_path: str):
         current_section = None
         current_data = []
-
+        
         with open(csv_path, 'r', encoding=self.csv_encoding, errors='ignore') as f:
             reader = csv.reader(f)
             for row in reader:
@@ -98,7 +99,7 @@ class CSVImporter:
 
                 if first_cell.startswith(':') and not first_cell.startswith(':"'):
                     if current_section and current_data:
-                        sections[current_section] = {'data': current_data}
+                        yield current_section, current_data
 
                     current_section = first_cell[1:]
                     current_data = []
@@ -109,9 +110,7 @@ class CSVImporter:
                         current_data.append(values)
 
         if current_section and current_data:
-            sections[current_section] = {'data': current_data}
-
-        return sections
+            yield current_section, current_data
 
     def _clean_value(self, val: str) -> Optional[str]:
         if val is None or val == '':
@@ -139,22 +138,23 @@ class CSVImporter:
         result = ImportResult()
 
         try:
-            sections = self.parse_csv_sections(csv_path)
-            logger.info(f"解析CSV完成，共 {len(sections)} 个区块: {list(sections.keys())}")
+            section_names = set()
+            for section_name, data in self.parse_csv_sections_streaming(csv_path):
+                section_names.add(section_name)
+                logger.info(f"处理区块: {section_name}, 共 {len(data)} 行")
 
-            if 'IODisc' in sections:
-                result.iodisc_count = self._import_iodisc(sections['IODisc'], mode)
+                if section_name == 'IODisc':
+                    result.iodisc_count += self._import_iodisc_data(data, mode)
+                elif section_name == 'IOReal':
+                    result.ioreal_count += self._import_ioreal_data(data, mode)
+                elif section_name == 'IOInt':
+                    result.ioint_count += self._import_ioint_data(data, mode)
+                elif section_name == 'IOAccess':
+                    result.ioaccess_count += self._import_ioaccess_data(data, mode)
 
-            if 'IOReal' in sections:
-                result.ioreal_count = self._import_ioreal(sections['IOReal'], mode)
+                self.session.commit()
 
-            if 'IOInt' in sections:
-                result.ioint_count = self._import_ioint(sections['IOInt'], mode)
-
-            if 'IOAccess' in sections:
-                result.ioaccess_count = self._import_ioaccess(sections['IOAccess'], mode)
-
-            self.session.commit()
+            logger.info(f"解析CSV完成，共 {len(section_names)} 个区块: {section_names}")
             logger.info(f"导入完成: IODisc={result.iodisc_count}, IOReal={result.ioreal_count}")
 
         except Exception as e:
@@ -164,12 +164,12 @@ class CSVImporter:
 
         return result
 
-    def _import_iodisc(self, section: Dict, mode: str) -> int:
+    def _import_iodisc_data(self, data: List, mode: str) -> int:
         if mode == 'replace':
             self.session.query(IODisc).delete()
 
-        data = section['data']
         count = 0
+        batch = []
 
         for row in data:
             mapped = self._map_row_by_position(row, IODISC_COLUMNS, IODISC_IMPORT_COLUMNS)
@@ -183,18 +183,24 @@ class CSVImporter:
                             setattr(existing, key, value)
                         count += 1
                         continue
-                record = IODisc(**mapped)
-                self.session.add(record)
+                batch.append(IODisc(**mapped))
                 count += 1
+                
+                if len(batch) >= BATCH_SIZE:
+                    self.session.bulk_save_objects(batch)
+                    batch = []
+
+        if batch:
+            self.session.bulk_save_objects(batch)
 
         return count
 
-    def _import_ioreal(self, section: Dict, mode: str) -> int:
+    def _import_ioreal_data(self, data: List, mode: str) -> int:
         if mode == 'replace':
             self.session.query(IOReal).delete()
 
-        data = section['data']
         count = 0
+        batch = []
 
         for row in data:
             mapped = self._map_row_by_position(row, IOREAL_COLUMNS, IOREAL_IMPORT_COLUMNS)
@@ -209,18 +215,24 @@ class CSVImporter:
                             setattr(existing, key, value)
                         count += 1
                         continue
-                record = IOReal(**mapped)
-                self.session.add(record)
+                batch.append(IOReal(**mapped))
                 count += 1
+                
+                if len(batch) >= BATCH_SIZE:
+                    self.session.bulk_save_objects(batch)
+                    batch = []
+
+        if batch:
+            self.session.bulk_save_objects(batch)
 
         return count
 
-    def _import_ioint(self, section: Dict, mode: str) -> int:
+    def _import_ioint_data(self, data: List, mode: str) -> int:
         if mode == 'replace':
             self.session.query(IOInt).delete()
 
-        data = section['data']
         count = 0
+        batch = []
 
         for row in data:
             mapped = self._map_row_by_position(row, IOINT_COLUMNS, 
@@ -241,18 +253,24 @@ class CSVImporter:
                             setattr(existing, key, value)
                         count += 1
                         continue
-                record = IOInt(**mapped)
-                self.session.add(record)
+                batch.append(IOInt(**mapped))
                 count += 1
+                
+                if len(batch) >= BATCH_SIZE:
+                    self.session.bulk_save_objects(batch)
+                    batch = []
+
+        if batch:
+            self.session.bulk_save_objects(batch)
 
         return count
 
-    def _import_ioaccess(self, section: Dict, mode: str) -> int:
+    def _import_ioaccess_data(self, data: List, mode: str) -> int:
         if mode == 'replace':
             self.session.query(IOAccess).delete()
 
-        data = section['data']
         count = 0
+        batch = []
 
         for row in data:
             mapped = self._map_row_by_position(row, IOACCESS_COLUMNS,
@@ -267,9 +285,15 @@ class CSVImporter:
                             setattr(existing, key, value)
                         count += 1
                         continue
-                record = IOAccess(**mapped)
-                self.session.add(record)
+                batch.append(IOAccess(**mapped))
                 count += 1
+                
+                if len(batch) >= BATCH_SIZE:
+                    self.session.bulk_save_objects(batch)
+                    batch = []
+
+        if batch:
+            self.session.bulk_save_objects(batch)
 
         return count
 

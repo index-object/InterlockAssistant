@@ -441,10 +441,9 @@ class FloatingWindow(QWidget):
         
         core_id = self.database_service.extract_core_identifier(text)
         if core_id:
-            results = self.database_service.get_all_io_real()
-            matched = [r for r in results if core_id in r.get('tag_name', '')]
+            matched = self.database_service.search_io_real_by_core_id(core_id, limit=10)
         else:
-            matched = self.database_service.search_io_real(text)
+            matched = self.database_service.search_io_real(text, limit=10)
         
         if matched:
             self._display_result(matched[0])
