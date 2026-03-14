@@ -2,9 +2,11 @@ import sys
 import os
 import json
 import logging
+import ctypes
+from ctypes import wintypes
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QFileDialog
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence, QPixmap, QShortcut, QIcon
+from PySide6.QtCore import Qt, QAbstractNativeEventFilter
+from PySide6.QtGui import QKeySequence, QPixmap, QIcon
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,8 +26,28 @@ from src.services.window_focus_watcher import WindowFocusWatcher
 from src.services.ui_automation_reader import UIAutomationReader
 from src.services.window_detector import WindowDetector
 from src.services.window_picker import WindowPicker
+from src.services.global_hotkey import GlobalHotkeyManager, WM_HOTKEY
 from src.ui.floating_window import FloatingWindow
 from src.ui.window_detector_window import WindowDetectorWindow
+
+
+class HotkeyNativeEventFilter(QAbstractNativeEventFilter):
+    def __init__(self, hotkey_manager: GlobalHotkeyManager):
+        super().__init__()
+        self.hotkey_manager = hotkey_manager
+    
+    def nativeEventFilter(self, eventType, message):
+        if eventType == b"windows_generic_MSG" or eventType == "windows_generic_MSG":
+            try:
+                msg_addr = int(message)
+                msg = ctypes.cast(msg_addr, ctypes.POINTER(wintypes.MSG)).contents
+                if msg.message == WM_HOTKEY:
+                    hotkey_id = msg.wParam
+                    self.hotkey_manager.handle_hotkey(hotkey_id)
+                    return True, 0
+            except Exception:
+                pass
+        return False, 0
 
 
 def get_base_path():
@@ -58,6 +80,10 @@ class WindowMonitorApp:
         self.window_picker = WindowPicker()
         self.window_detector_window = None
         
+        self.global_hotkey = GlobalHotkeyManager()
+        self.hotkey_event_filter = HotkeyNativeEventFilter(self.global_hotkey)
+        self.app.installNativeEventFilter(self.hotkey_event_filter)
+        
         self.test_mode = False
         self.test_input_dialog = None
         
@@ -68,7 +94,7 @@ class WindowMonitorApp:
         self.floating_window.move_to_corner()
         
         self.create_tray()
-        self.setup_shortcut()
+        self.setup_global_hotkey()
         
         self.window_data_watcher.data_changed.connect(self.on_data_change)
         
@@ -156,20 +182,17 @@ class WindowMonitorApp:
         else:
             self.floating_window.show()
     
-    def setup_shortcut(self):
+    def setup_global_hotkey(self):
         hotkey_str = self.hotkey_manager.get_hotkey('show_hide')
-        self.show_hide_shortcut = QShortcut(
-            QKeySequence(hotkey_str),
-            self.floating_window
-        )
-        self.show_hide_shortcut.activated.connect(self.toggle_window)
+        self.global_hotkey.unregister_all()
+        self.global_hotkey.register(hotkey_str, self.toggle_window)
     
     def open_config(self):
         from src.ui.config_window import ConfigWindow
         config = ConfigWindow()
         if config.exec():
             self.hotkey_manager.load_config()
-            self.setup_shortcut()
+            self.setup_global_hotkey()
     
     def import_io_data(self):
         files, _ = QFileDialog.getOpenFileNames(
@@ -266,6 +289,7 @@ class WindowMonitorApp:
         self.floating_window.update_content(value)
     
     def quit_app(self):
+        self.global_hotkey.unregister_all()
         self.window_data_watcher.stop_watching()
         self.window_focus_watcher.stop()
         self.app.quit()

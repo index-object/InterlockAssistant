@@ -23,11 +23,11 @@ class HotkeyManager:
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     hotkey_config = config.get('hotkey', {})
-                    self.hotkeys = {'show_hide': hotkey_config.get('show_hide', 'Ctrl+Shift+V')}
+                    self.hotkeys = {'show_hide': hotkey_config.get('show_hide', 'Ctrl+Shift+Z')}
             else:
-                self.hotkeys = {'show_hide': 'Ctrl+Shift+V'}
+                self.hotkeys = {'show_hide': 'Ctrl+Shift+Z'}
         except (FileNotFoundError, json.JSONDecodeError):
-            self.hotkeys = {'show_hide': 'Ctrl+Shift+V'}
+            self.hotkeys = {'show_hide': 'Ctrl+Shift+Z'}
     
     def save_config(self):
         try:
@@ -38,7 +38,7 @@ class HotkeyManager:
         
         if 'hotkey' not in config:
             config['hotkey'] = {}
-        config['hotkey']['show_hide'] = self.hotkeys.get('show_hide', 'Ctrl+Shift+V')
+        config['hotkey']['show_hide'] = self.hotkeys.get('show_hide', 'Ctrl+Shift+Z')
         
         with open(self.config_path, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
@@ -48,7 +48,7 @@ class HotkeyManager:
         self.save_config()
     
     def get_hotkey(self, name: str) -> str:
-        return self.hotkeys.get(name, 'Ctrl+Shift+V')
+        return self.hotkeys.get(name, 'Ctrl+Shift+Z')
     
     def get_all_hotkeys(self) -> dict:
         return self.hotkeys.copy()
