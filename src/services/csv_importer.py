@@ -174,6 +174,15 @@ class CSVImporter:
         for row in data:
             mapped = self._map_row_by_position(row, IODISC_COLUMNS, IODISC_IMPORT_COLUMNS)
             if mapped.get('tag_name'):
+                if mode == 'merge':
+                    existing = self.session.query(IODisc).filter(
+                        IODisc.tag_name == mapped['tag_name']
+                    ).first()
+                    if existing:
+                        for key, value in mapped.items():
+                            setattr(existing, key, value)
+                        count += 1
+                        continue
                 record = IODisc(**mapped)
                 self.session.add(record)
                 count += 1
@@ -191,6 +200,15 @@ class CSVImporter:
             mapped = self._map_row_by_position(row, IOREAL_COLUMNS, IOREAL_IMPORT_COLUMNS)
             if mapped.get('tag_name'):
                 mapped = self._convert_numeric_fields(mapped)
+                if mode == 'merge':
+                    existing = self.session.query(IOReal).filter(
+                        IOReal.tag_name == mapped['tag_name']
+                    ).first()
+                    if existing:
+                        for key, value in mapped.items():
+                            setattr(existing, key, value)
+                        count += 1
+                        continue
                 record = IOReal(**mapped)
                 self.session.add(record)
                 count += 1
@@ -214,6 +232,15 @@ class CSVImporter:
                  'access_name', 'item_name'])
             if mapped.get('tag_name'):
                 mapped = self._convert_numeric_fields(mapped, is_real=False)
+                if mode == 'merge':
+                    existing = self.session.query(IOInt).filter(
+                        IOInt.tag_name == mapped['tag_name']
+                    ).first()
+                    if existing:
+                        for key, value in mapped.items():
+                            setattr(existing, key, value)
+                        count += 1
+                        continue
                 record = IOInt(**mapped)
                 self.session.add(record)
                 count += 1
@@ -231,6 +258,15 @@ class CSVImporter:
             mapped = self._map_row_by_position(row, IOACCESS_COLUMNS,
                 ['access_name', 'application', 'topic', 'advise_active', 'dde_protocol'])
             if mapped.get('access_name'):
+                if mode == 'merge':
+                    existing = self.session.query(IOAccess).filter(
+                        IOAccess.access_name == mapped['access_name']
+                    ).first()
+                    if existing:
+                        for key, value in mapped.items():
+                            setattr(existing, key, value)
+                        count += 1
+                        continue
                 record = IOAccess(**mapped)
                 self.session.add(record)
                 count += 1
