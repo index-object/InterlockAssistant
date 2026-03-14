@@ -163,9 +163,10 @@ class WindowMonitorApp:
 
         total_result = {'iodisc': 0, 'ioreal': 0, 'ioint': 0, 'ioaccess': 0, 'errors': []}
 
-        for csv_file in files:
+        for i, csv_file in enumerate(files):
             try:
-                result = self.database_service.import_from_csv(csv_file, mode='replace')
+                mode = 'replace' if i == 0 else 'merge'
+                result = self.database_service.import_from_csv(csv_file, mode=mode)
                 total_result['iodisc'] += result.iodisc_count
                 total_result['ioreal'] += result.ioreal_count
                 total_result['ioint'] += result.ioint_count
