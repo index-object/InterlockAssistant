@@ -69,7 +69,7 @@ class WindowDataWatcher(QObject):
             value = self._read_target_value()
             
             if value is None:
-                logger.info("未能读取到目标值")
+                logger.debug("未能读取到目标值")
             elif value != self._last_value:
                 logger.info(f"检测到数据变化: {value}")
                 self._last_value = value
@@ -83,22 +83,22 @@ class WindowDataWatcher(QObject):
         try:
             import uiautomation as auto
             
-            logger.info(f"尝试读取窗口数据: hwnd={self._current_hwnd}")
+            logger.debug(f"尝试读取窗口数据: hwnd={self._current_hwnd}")
             window = auto.ControlFromHandle(self._current_hwnd)
             if not window:
-                logger.info(f"无法获取窗口控件: hwnd={self._current_hwnd}")
+                logger.debug(f"无法获取窗口控件: hwnd={self._current_hwnd}")
                 return None
             
             target_config = self._config.get('target_control', {})
             name_pattern = target_config.get('name_pattern', r'Set Value:\s*(.+)')
             
-            logger.info("递归遍历所有控件，查找Set Value:")
+            logger.debug("递归遍历所有控件，查找Set Value:")
             value = self._find_value_recursive(window, name_pattern, 0)
             if value:
-                logger.info(f"找到目标值: {value}")
+                logger.debug(f"找到目标值: {value}")
                 return value
             
-            logger.info("未能找到目标值")
+            logger.debug("未能找到目标值")
             return None
             
         except Exception as e:
@@ -114,7 +114,7 @@ class WindowDataWatcher(QObject):
             if name and 'Set Value:' in str(name):
                 match = re.search(name_pattern, str(name))
                 if match:
-                    logger.info(f"找到匹配项: {name}")
+                    logger.debug(f"找到匹配项: {name}")
                     return match.group(1).strip()
         except Exception:
             pass
