@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt, QPoint, QTimer
 from PySide6.QtGui import QMouseEvent, QCursor
 from typing import Dict, Optional
 import os
+import json
 from ..services.engineering_code import convert_to_engineering_code
 
 
@@ -13,27 +14,18 @@ class FloatingWindow(QWidget):
         self.window_info = window_info
         self.database_service = database_service
         self._drag_position = QPoint()
-        self.access_name_map = self._load_access_name_map()
+        self.access_name_map = self._load_config().get('access_name_mapping', {})
         self.init_ui()
         self.connect_signals()
     
-    def _load_access_name_map(self) -> Dict[str, str]:
-        mapping = {}
-        map_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-                                'config', 'access_name映射.txt')
+    def _load_config(self) -> Dict:
+        config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                                   'config', 'config.json')
         try:
-            with open(map_file, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if '→' in line:
-                        parts = line.split('→')
-                        if len(parts) == 2:
-                            key = parts[0].strip()
-                            value = parts[1].strip()
-                            mapping[key] = value
+            with open(config_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
         except Exception:
-            pass
-        return mapping
+            return {}
     
     def init_ui(self):
         self.setWindowTitle("窗口数据监控")
