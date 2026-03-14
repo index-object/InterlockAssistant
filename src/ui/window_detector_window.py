@@ -4,7 +4,8 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                                 QPushButton, QTextEdit, QTreeWidget, QTreeWidgetItem,
                                 QMessageBox)
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QClipboard
+from PySide6.QtGui import QClipboard, QIcon
+from ..utils.icon_utils import get_icon_path
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,9 @@ class WindowDetectorWindow(QWidget):
     def __init__(self, window_detector, window_picker):
         logger.info("WindowDetectorWindow: 开始初始化...")
         super().__init__()
+        icon_path = get_icon_path()
+        if icon_path:
+            self.setWindowIcon(QIcon(icon_path))
         logger.info("WindowDetectorWindow: super().__init__() 完成")
         self.window_detector = window_detector
         self.window_picker = window_picker

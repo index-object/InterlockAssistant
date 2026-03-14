@@ -1,9 +1,10 @@
 import sys
+import os
 import json
 import logging
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QFileDialog
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence, QPixmap, QShortcut
+from PySide6.QtGui import QKeySequence, QPixmap, QShortcut, QIcon
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,10 +28,25 @@ from src.ui.floating_window import FloatingWindow
 from src.ui.window_detector_window import WindowDetectorWindow
 
 
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return sys._MEIPASS
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def get_app_icon_path():
+    icon_path = os.path.join(get_base_path(), 'assets', 'icon.ico')
+    return icon_path if os.path.exists(icon_path) else None
+
+
 class WindowMonitorApp:
     def __init__(self):
         self.app = QApplication(sys.argv)
         self.app.setQuitOnLastWindowClosed(False)
+        
+        icon_path = get_app_icon_path()
+        if icon_path:
+            self.app.setWindowIcon(QIcon(icon_path))
         
         self.window_data_watcher = WindowDataWatcher()
         self.window_info = WindowInfo()
@@ -105,11 +121,16 @@ class WindowMonitorApp:
     
     def create_tray(self):
         self.tray = QSystemTrayIcon()
-        self.tray.setToolTip("窗口数据监控")
+        self.tray.setToolTip("SIS联锁调试助手")
         
-        pixmap = QPixmap(32, 32)
-        pixmap.fill(Qt.GlobalColor.blue)
-        self.tray.setIcon(pixmap)
+        icon_path = get_app_icon_path()
+        if icon_path:
+            from PySide6.QtGui import QIcon
+            self.tray.setIcon(QIcon(icon_path))
+        else:
+            pixmap = QPixmap(32, 32)
+            pixmap.fill(Qt.GlobalColor.blue)
+            self.tray.setIcon(pixmap)
         
         menu = QMenu()
         menu.addAction("显示/隐藏", self.toggle_window)

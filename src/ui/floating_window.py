@@ -1,16 +1,20 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                                  QPushButton, QFrame, QGridLayout, QSizePolicy, QApplication)
 from PySide6.QtCore import Qt, QPoint, QTimer
-from PySide6.QtGui import QMouseEvent, QCursor
+from PySide6.QtGui import QMouseEvent, QCursor, QIcon
 from typing import Dict, Optional
 import os
 import json
 from ..services.engineering_code import convert_to_engineering_code
+from ..utils.icon_utils import get_icon_path, get_base_path
 
 
 class FloatingWindow(QWidget):
     def __init__(self, window_info, database_service):
         super().__init__()
+        icon_path = get_icon_path()
+        if icon_path:
+            self.setWindowIcon(QIcon(icon_path))
         self.window_info = window_info
         self.database_service = database_service
         self._drag_position = QPoint()
@@ -19,8 +23,7 @@ class FloatingWindow(QWidget):
         self.connect_signals()
     
     def _load_config(self) -> Dict:
-        config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-                                   'config', 'config.json')
+        config_file = os.path.join(get_base_path(), 'config', 'config.json')
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
                 return json.load(f)

@@ -1,11 +1,17 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 from PySide6.QtCore import Signal
+from PySide6.QtGui import QIcon
+from ..utils.icon_utils import get_icon_path
+
 
 class TestInputDialog(QDialog):
     value_submitted = Signal(str)
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        icon_path = get_icon_path()
+        if icon_path:
+            self.setWindowIcon(QIcon(icon_path))
         self.setWindowTitle("测试模式 - 输入测试值")
         self.setFixedSize(400, 150)
         self.init_ui()

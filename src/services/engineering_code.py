@@ -1,15 +1,19 @@
 import json
 import os
+import sys
 from typing import Optional, Dict
+
+
+def _get_base_path():
+    if getattr(sys, 'frozen', False):
+        return sys._MEIPASS
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class EngineeringCodeConverter:
     def __init__(self, config_path: str = None):
         if config_path is None:
-            config_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                'config', 'config.json'
-            )
+            config_path = os.path.join(_get_base_path(), 'config', 'config.json')
         self.config = self._load_config(config_path)
     
     def _load_config(self, config_path: str) -> Dict:

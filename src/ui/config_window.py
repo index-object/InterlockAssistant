@@ -1,16 +1,18 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                                    QPushButton, QLineEdit, QGroupBox, QSpinBox, QMessageBox)
+from PySide6.QtGui import QIcon
 import json
 import os
+from ..utils.icon_utils import get_icon_path, get_base_path
 
 
 class ConfigWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.config_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            'config', 'config.json'
-        )
+        icon_path = get_icon_path()
+        if icon_path:
+            self.setWindowIcon(QIcon(icon_path))
+        self.config_path = os.path.join(get_base_path(), 'config', 'config.json')
         self.config = self._load_config()
         self.init_ui()
         self.load_data()
