@@ -102,6 +102,19 @@ class DatabaseService:
         finally:
             session.close()
 
+    def update_io_real_range(self, tag_name: str, min_eu: float, max_eu: float) -> bool:
+        session = self._get_session()
+        try:
+            record = session.query(IOReal).filter(IOReal.tag_name == tag_name).first()
+            if not record:
+                return False
+            record.min_eu = min_eu
+            record.max_eu = max_eu
+            session.commit()
+            return True
+        finally:
+            session.close()
+
     def search_all_io_tags(self, text: str, limit: Optional[int] = None) -> List[Dict]:
         if not text:
             return []

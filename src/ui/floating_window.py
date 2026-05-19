@@ -23,6 +23,16 @@ class FloatingWindow(QWidget):
         self._current_min_eu = None
         self._current_max_eu = None
         self._current_eng_units = ""
+        self._current_tag_name = None
+        self._current_hihi_val = None
+        self._current_hi_val = None
+        self._current_lo_val = None
+        self._current_lolo_val = None
+        self._current_hihi_state = None
+        self._current_hi_state = None
+        self._current_lo_state = None
+        self._current_lolo_state = None
+        self._range_updating = False
         self._slider_updating = False
         self.init_ui()
         self.connect_signals()
@@ -40,6 +50,7 @@ class FloatingWindow(QWidget):
         self.setMinimumSize(260, 420)
         self.resize(280, 500)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setStyleSheet("""
             FloatingWindow {
                 background-color: #F8FAFC;
@@ -161,8 +172,64 @@ class FloatingWindow(QWidget):
         self.info_label.setStyleSheet("QLabel { font-size: 12px; color: #64748B; }")
         self.info_label.setWordWrap(True)
         
-        self.range_label = QLabel("量程: -- ~ -- --")
-        self.range_label.setStyleSheet("QLabel { font-size: 16px; color: #1E293B; font-weight: 500; }")
+        self.range_container = QWidget()
+        self.range_container.setStyleSheet("QWidget { background: transparent; }")
+        range_layout = QHBoxLayout(self.range_container)
+        range_layout.setContentsMargins(0, 0, 0, 0)
+        range_layout.setSpacing(4)
+
+        range_title = QLabel("量程:")
+        range_title.setStyleSheet("font-size: 16px; color: #1E293B; font-weight: 500;")
+
+        self.min_eu_input = QLineEdit("--")
+        self.min_eu_input.setStyleSheet("""
+            QLineEdit {
+                color: #1E293B;
+                font-size: 16px;
+                font-weight: 500;
+                background: #F8FAFC;
+                border: 1px solid #CBD5E1;
+                border-radius: 4px;
+                padding: 2px 6px;
+                max-width: 80px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #3B82F6;
+            }
+        """)
+        self.min_eu_input.setAlignment(Qt.AlignCenter)
+        self.min_eu_input.setValidator(QDoubleValidator())
+
+        range_separator = QLabel("~")
+        range_separator.setStyleSheet("font-size: 16px; color: #1E293B; font-weight: 500;")
+
+        self.max_eu_input = QLineEdit("--")
+        self.max_eu_input.setStyleSheet("""
+            QLineEdit {
+                color: #1E293B;
+                font-size: 16px;
+                font-weight: 500;
+                background: #F8FAFC;
+                border: 1px solid #CBD5E1;
+                border-radius: 4px;
+                padding: 2px 6px;
+                max-width: 80px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #3B82F6;
+            }
+        """)
+        self.max_eu_input.setAlignment(Qt.AlignCenter)
+        self.max_eu_input.setValidator(QDoubleValidator())
+
+        self.range_unit_label = QLabel("")
+        self.range_unit_label.setStyleSheet("font-size: 16px; color: #1E293B; font-weight: 500;")
+
+        range_layout.addWidget(range_title)
+        range_layout.addWidget(self.min_eu_input)
+        range_layout.addWidget(range_separator)
+        range_layout.addWidget(self.max_eu_input)
+        range_layout.addWidget(self.range_unit_label)
         
         self.slider_container = QWidget()
         self.slider_container.setStyleSheet("QWidget { background: transparent; }")
@@ -324,7 +391,7 @@ class FloatingWindow(QWidget):
         
         self.result_card_layout.addWidget(self.tag_container)
         self.result_card_layout.addWidget(self.info_label)
-        self.result_card_layout.addWidget(self.range_label)
+        self.result_card_layout.addWidget(self.range_container)
         self.result_card_layout.addWidget(self.slider_container)
         self.result_card_layout.addWidget(self.alarm_grid)
         self.result_card_layout.addWidget(self.access_label)
@@ -541,6 +608,8 @@ class FloatingWindow(QWidget):
     
     def connect_signals(self):
         self.close_btn.clicked.connect(self.hide_to_tray)
+        self.min_eu_input.editingFinished.connect(self._on_range_edited)
+        self.max_eu_input.editingFinished.connect(self._on_range_edited)
     
     def _on_slider_changed(self, slider_value):
         if self._slider_updating:
@@ -656,17 +725,84 @@ class FloatingWindow(QWidget):
         
         self.slider_container.show()
     
+    def _on_range_edited(self):
+        if self._range_updating:
+            return
+
+        min_text = self.min_eu_input.text().strip()
+        max_text = self.max_eu_input.text().strip()
+
+        try:
+            new_min = float(min_text)
+            new_max = float(max_text)
+        except (ValueError, TypeError):
+            self._restore_range_display()
+            return
+
+        if new_min >= new_max:
+            self._restore_range_display()
+            return
+
+        self._current_min_eu = new_min
+        self._current_max_eu = new_max
+
+        if self._current_tag_name:
+            self.database_service.update_io_real_range(self._current_tag_name, new_min, new_max)
+
+        self._setup_slider(new_min, new_max, self._current_eng_units)
+        self._refresh_alarm_codes(new_min, new_max, self._current_eng_units)
+
+    def _restore_range_display(self):
+        if self._current_min_eu is not None and self._current_max_eu is not None:
+            self.min_eu_input.setText(str(self._current_min_eu))
+            self.max_eu_input.setText(str(self._current_max_eu))
+
+    def _refresh_alarm_codes(self, min_eu, max_eu, eng_units):
+        min_eu_val = min_eu if min_eu is not None else None
+        max_eu_val = max_eu if max_eu is not None else None
+
+        hihi_code = convert_to_engineering_code(
+            self._current_hihi_val, min_eu_val, max_eu_val
+        ) if self._current_hihi_state is not None and self._current_hihi_state != 0 and self._current_hihi_val is not None else None
+        hi_code = convert_to_engineering_code(
+            self._current_hi_val, min_eu_val, max_eu_val
+        ) if self._current_hi_state is not None and self._current_hi_state != 0 and self._current_hi_val is not None else None
+        lo_code = convert_to_engineering_code(
+            self._current_lo_val, min_eu_val, max_eu_val
+        ) if self._current_lo_state is not None and self._current_lo_state != 0 and self._current_lo_val is not None else None
+        lolo_code = convert_to_engineering_code(
+            self._current_lolo_val, min_eu_val, max_eu_val
+        ) if self._current_lolo_state is not None and self._current_lolo_state != 0 and self._current_lolo_val is not None else None
+
+        self._update_engineering_code_display(self.hihi_code_widget, hihi_code)
+        self._update_engineering_code_display(self.hi_code_widget, hi_code)
+        self._update_engineering_code_display(self.lo_code_widget, lo_code)
+        self._update_engineering_code_display(self.lolo_code_widget, lolo_code)
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self._drag_position = event.globalPosition().toPoint()
-            event.accept()
+            if self.title_label.geometry().contains(event.position().toPoint()):
+                self._drag_position = event.globalPosition().toPoint()
+                self._dragging = True
+                event.accept()
+            else:
+                self.setFocus()
+                super().mousePressEvent(event)
+        else:
+            super().mousePressEvent(event)
     
     def mouseMoveEvent(self, event):
-        if event.buttons() == Qt.LeftButton:
+        if event.buttons() == Qt.LeftButton and getattr(self, '_dragging', False):
             delta = event.globalPosition().toPoint() - self._drag_position
             self.move(self.pos() + delta)
             self._drag_position = event.globalPosition().toPoint()
             event.accept()
+        else:
+            super().mouseMoveEvent(event)
+    
+    def mouseReleaseEvent(self, event):
+        self._dragging = False
+        super().mouseReleaseEvent(event)
     
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -713,6 +849,8 @@ class FloatingWindow(QWidget):
         item_name = real.get('item_name', '')
         access_name = real.get('access_name', '')
         
+        self._current_tag_name = tag_name
+
         prefix = "[模糊] " if is_fuzzy else ""
         self.tag_label.setText(f"{prefix}{tag_name}" if tag_name else "--")
         
@@ -736,16 +874,26 @@ class FloatingWindow(QWidget):
             info_parts.append(f"注释: {comment}")
         self.info_label.setText("\n".join(info_parts) if info_parts else "")
         
-        if min_eu != '' and max_eu != '':
-            unit_str = f" {eng_units}" if eng_units else ""
-            self.range_label.setText(f"量程: {min_eu} ~ {max_eu}{unit_str}")
+        self._range_updating = True
+        if min_eu is not None and min_eu != '' and max_eu is not None and max_eu != '':
+            self.range_container.show()
+            self.min_eu_input.setText(str(min_eu))
+            self.max_eu_input.setText(str(max_eu))
+            self.range_unit_label.setText(f" {eng_units}" if eng_units else "")
             self._setup_slider(min_eu, max_eu, eng_units)
         elif eng_units:
-            self.range_label.setText(f"单位: {eng_units}")
+            self.range_container.show()
+            self.min_eu_input.setText("--")
+            self.max_eu_input.setText("--")
+            self.range_unit_label.setText(f"单位: {eng_units}")
             self.slider_container.hide()
         else:
-            self.range_label.setText("量程: --")
+            self.range_container.show()
+            self.min_eu_input.setText("--")
+            self.max_eu_input.setText("--")
+            self.range_unit_label.setText("")
             self.slider_container.hide()
+        self._range_updating = False
         
         hihi_state = real.get('hihi_alarm_state')
         hi_state = real.get('hi_alarm_state')
@@ -756,7 +904,16 @@ class FloatingWindow(QWidget):
         hi_val = real.get('hi_alarm_value')
         lo_val = real.get('lo_alarm_value')
         lolo_val = real.get('lolo_alarm_value')
-        
+
+        self._current_hihi_val = hihi_val
+        self._current_hi_val = hi_val
+        self._current_lo_val = lo_val
+        self._current_lolo_val = lolo_val
+        self._current_hihi_state = hihi_state
+        self._current_hi_state = hi_state
+        self._current_lo_state = lo_state
+        self._current_lolo_state = lolo_state
+
         min_eu_val = min_eu if min_eu != '' else None
         max_eu_val = max_eu if max_eu != '' else None
         
