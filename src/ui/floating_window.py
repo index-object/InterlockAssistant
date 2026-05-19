@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                                   QPushButton, QFrame, QGridLayout, QSizePolicy, QApplication, QSlider, QLineEdit)
 from PySide6.QtCore import Qt, QPoint, QTimer
-from PySide6.QtGui import QMouseEvent, QCursor, QIcon, QDoubleValidator
+from PySide6.QtGui import QMouseEvent, QCursor, QIcon, QDoubleValidator, QFontMetrics, QFont
 from typing import Dict, Optional
 import os
 import json
@@ -137,14 +137,15 @@ class FloatingWindow(QWidget):
         tag_layout.setSpacing(8)
         
         self.tag_label = QLabel("--")
+        self._tag_font = QFont()
+        self._tag_font.setPointSize(18)
+        self._tag_font.setBold(True)
+        self.tag_label.setFont(self._tag_font)
         self.tag_label.setStyleSheet("""
             QLabel {
-                font-size: 18px;
-                font-weight: bold;
                 color: #2563EB;
             }
         """)
-        
         self.tag_copy_btn = QPushButton("复制")
         self.tag_copy_btn.setFixedSize(40, 22)
         self.tag_copy_btn.setStyleSheet("""
@@ -176,7 +177,7 @@ class FloatingWindow(QWidget):
         self.range_container.setStyleSheet("QWidget { background: transparent; }")
         range_layout = QHBoxLayout(self.range_container)
         range_layout.setContentsMargins(0, 0, 0, 0)
-        range_layout.setSpacing(4)
+        range_layout.setSpacing(2)
 
         range_title = QLabel("量程:")
         range_title.setStyleSheet("font-size: 16px; color: #1E293B; font-weight: 500;")
@@ -190,8 +191,7 @@ class FloatingWindow(QWidget):
                 background: #F8FAFC;
                 border: 1px solid #CBD5E1;
                 border-radius: 4px;
-                padding: 2px 6px;
-                max-width: 80px;
+                padding: 2px 4px;
             }
             QLineEdit:focus {
                 border: 1px solid #3B82F6;
@@ -202,6 +202,7 @@ class FloatingWindow(QWidget):
 
         range_separator = QLabel("~")
         range_separator.setStyleSheet("font-size: 16px; color: #1E293B; font-weight: 500;")
+        range_separator.setFixedWidth(14)
 
         self.max_eu_input = QLineEdit("--")
         self.max_eu_input.setStyleSheet("""
@@ -212,8 +213,7 @@ class FloatingWindow(QWidget):
                 background: #F8FAFC;
                 border: 1px solid #CBD5E1;
                 border-radius: 4px;
-                padding: 2px 6px;
-                max-width: 80px;
+                padding: 2px 4px;
             }
             QLineEdit:focus {
                 border: 1px solid #3B82F6;
@@ -222,14 +222,10 @@ class FloatingWindow(QWidget):
         self.max_eu_input.setAlignment(Qt.AlignCenter)
         self.max_eu_input.setValidator(QDoubleValidator())
 
-        self.range_unit_label = QLabel("")
-        self.range_unit_label.setStyleSheet("font-size: 16px; color: #1E293B; font-weight: 500;")
-
         range_layout.addWidget(range_title)
         range_layout.addWidget(self.min_eu_input)
         range_layout.addWidget(range_separator)
         range_layout.addWidget(self.max_eu_input)
-        range_layout.addWidget(self.range_unit_label)
         
         self.slider_container = QWidget()
         self.slider_container.setStyleSheet("QWidget { background: transparent; }")
@@ -541,49 +537,34 @@ class FloatingWindow(QWidget):
             }
         """)
     
-    def _style_alarm_active(self, label: QLabel, value_label: QLabel, is_high: bool):
-        if is_high:
-            label.setStyleSheet("""
-                QLabel {
-                    background-color: #DC2626;
-                    color: white;
-                    font-size: 12px;
-                    font-weight: bold;
-                    padding: 4px;
-                    border-radius: 4px;
-                }
-            """)
-            value_label.setStyleSheet("""
-                QLabel {
-                    background-color: #DC2626;
-                    color: white;
-                    font-size: 14px;
-                    font-weight: bold;
-                    padding: 6px;
-                    border-radius: 4px;
-                }
-            """)
-        else:
-            label.setStyleSheet("""
-                QLabel {
-                    background-color: #F59E0B;
-                    color: #1F2937;
-                    font-size: 12px;
-                    font-weight: bold;
-                    padding: 4px;
-                    border-radius: 4px;
-                }
-            """)
-            value_label.setStyleSheet("""
-                QLabel {
-                    background-color: #F59E0B;
-                    color: #1F2937;
-                    font-size: 14px;
-                    font-weight: bold;
-                    padding: 6px;
-                    border-radius: 4px;
-                }
-            """)
+    def _style_alarm_active(self, label: QLabel, value_label: QLabel, level: int):
+        colors = {
+            0: ("#DC2626", "white"),   # hihi - 深红
+            1: ("#F87171", "white"),   # hi   - 浅红
+            2: ("#FCD34D", "#1F2937"), # lo   - 浅黄
+            3: ("#F59E0B", "#1F2937"), # lolo - 深黄
+        }
+        bg, fg = colors.get(level, ("#E2E8F0", "#64748B"))
+        label.setStyleSheet(f"""
+            QLabel {{
+                background-color: {bg};
+                color: {fg};
+                font-size: 12px;
+                font-weight: bold;
+                padding: 4px;
+                border-radius: 4px;
+            }}
+        """)
+        value_label.setStyleSheet(f"""
+            QLabel {{
+                background-color: {bg};
+                color: {fg};
+                font-size: 14px;
+                font-weight: bold;
+                padding: 6px;
+                border-radius: 4px;
+            }}
+        """)
     
     def _style_alarm_inactive(self, label: QLabel, value_label: QLabel):
         label.setStyleSheet("""
@@ -779,6 +760,19 @@ class FloatingWindow(QWidget):
         self._update_engineering_code_display(self.lo_code_widget, lo_code)
         self._update_engineering_code_display(self.lolo_code_widget, lolo_code)
 
+    def _auto_shrink_font(self, label: QLabel, max_size: int = 18, min_size: int = 8):
+        text = label.text()
+        if not text or text == "--":
+            return
+        available_width = label.width() - 4
+        font = QFont(label.font())
+        for size in range(max_size, min_size - 1, -1):
+            font.setPointSize(size)
+            text_width = QFontMetrics(font).horizontalAdvance(text)
+            if text_width <= available_width:
+                break
+        label.setFont(font)
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             if self.title_label.geometry().contains(event.position().toPoint()):
@@ -853,6 +847,7 @@ class FloatingWindow(QWidget):
 
         prefix = "[模糊] " if is_fuzzy else ""
         self.tag_label.setText(f"{prefix}{tag_name}" if tag_name else "--")
+        QTimer.singleShot(0, lambda: self._auto_shrink_font(self.tag_label))
         
         if tag_name:
             self.tag_copy_btn.show()
@@ -879,19 +874,16 @@ class FloatingWindow(QWidget):
             self.range_container.show()
             self.min_eu_input.setText(str(min_eu))
             self.max_eu_input.setText(str(max_eu))
-            self.range_unit_label.setText(f" {eng_units}" if eng_units else "")
             self._setup_slider(min_eu, max_eu, eng_units)
         elif eng_units:
             self.range_container.show()
             self.min_eu_input.setText("--")
             self.max_eu_input.setText("--")
-            self.range_unit_label.setText(f"单位: {eng_units}")
             self.slider_container.hide()
         else:
             self.range_container.show()
             self.min_eu_input.setText("--")
             self.max_eu_input.setText("--")
-            self.range_unit_label.setText("")
             self.slider_container.hide()
         self._range_updating = False
         
@@ -921,7 +913,7 @@ class FloatingWindow(QWidget):
         
         if hihi_state is not None and hihi_state != 0 and hihi_val is not None:
             self.hihi_value.setText(f"{hihi_val}{val_str}")
-            self._style_alarm_active(self.hihi_label, self.hihi_value, is_high=True)
+            self._style_alarm_active(self.hihi_label, self.hihi_value, level=0)
             hihi_code = convert_to_engineering_code(hihi_val, min_eu_val, max_eu_val)
         else:
             self.hihi_value.setText("--")
@@ -930,7 +922,7 @@ class FloatingWindow(QWidget):
         
         if hi_state is not None and hi_state != 0 and hi_val is not None:
             self.hi_value.setText(f"{hi_val}{val_str}")
-            self._style_alarm_active(self.hi_label, self.hi_value, is_high=True)
+            self._style_alarm_active(self.hi_label, self.hi_value, level=1)
             hi_code = convert_to_engineering_code(hi_val, min_eu_val, max_eu_val)
         else:
             self.hi_value.setText("--")
@@ -939,7 +931,7 @@ class FloatingWindow(QWidget):
         
         if lo_state is not None and lo_state != 0 and lo_val is not None:
             self.lo_value.setText(f"{lo_val}{val_str}")
-            self._style_alarm_active(self.lo_label, self.lo_value, is_high=False)
+            self._style_alarm_active(self.lo_label, self.lo_value, level=2)
             lo_code = convert_to_engineering_code(lo_val, min_eu_val, max_eu_val)
         else:
             self.lo_value.setText("--")
@@ -948,7 +940,7 @@ class FloatingWindow(QWidget):
         
         if lolo_state is not None and lolo_state != 0 and lolo_val is not None:
             self.lolo_value.setText(f"{lolo_val}{val_str}")
-            self._style_alarm_active(self.lolo_label, self.lolo_value, is_high=False)
+            self._style_alarm_active(self.lolo_label, self.lolo_value, level=3)
             lolo_code = convert_to_engineering_code(lolo_val, min_eu_val, max_eu_val)
         else:
             self.lolo_value.setText("--")

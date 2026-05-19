@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                                   QPushButton, QLineEdit, QGroupBox, QSpinBox, QMessageBox)
+                                   QPushButton, QLineEdit, QGroupBox, QSpinBox, QCheckBox, QMessageBox)
 from PySide6.QtGui import QIcon
 import json
 import os
@@ -67,6 +67,12 @@ class ConfigWindow(QDialog):
         
         code_group.setLayout(code_layout)
         
+        log_group = QGroupBox("日志设置")
+        log_layout = QVBoxLayout()
+        self.log_checkbox = QCheckBox("启用日志记录（写入 app.log）")
+        log_layout.addWidget(self.log_checkbox)
+        log_group.setLayout(log_layout)
+        
         btn_layout = QHBoxLayout()
         self.save_btn = QPushButton("保存")
         self.cancel_btn = QPushButton("取消")
@@ -76,6 +82,7 @@ class ConfigWindow(QDialog):
         
         layout.addWidget(hotkey_group)
         layout.addWidget(code_group)
+        layout.addWidget(log_group)
         layout.addStretch()
         layout.addLayout(btn_layout)
         
@@ -91,11 +98,15 @@ class ConfigWindow(QDialog):
         eng_code = self.config.get('engineering_code', {})
         self.min_code_spin.setValue(eng_code.get('min_code', 819))
         self.max_code_spin.setValue(eng_code.get('max_code', 4095))
+        
+        logging_config = self.config.get('logging', {})
+        self.log_checkbox.setChecked(logging_config.get('enabled', False))
     
     def save_config(self):
         self.config['hotkey']['show_hide'] = self.hotkey_edit.text().strip()
         self.config['engineering_code']['min_code'] = self.min_code_spin.value()
         self.config['engineering_code']['max_code'] = self.max_code_spin.value()
+        self.config.setdefault('logging', {})['enabled'] = self.log_checkbox.isChecked()
         
         try:
             os.makedirs(os.path.dirname(self.config_path), exist_ok=True)

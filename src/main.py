@@ -12,11 +12,26 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
+
+
+def _setup_log_file():
+    config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config', 'config.json')
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        if config.get('logging', {}).get('enabled', False):
+            file_handler = logging.FileHandler('app.log', encoding='utf-8')
+            file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+            logger.addHandler(file_handler)
+    except Exception:
+        pass
+
+
+_setup_log_file()
 
 from src.services.window_data_watcher import WindowDataWatcher
 from src.services.window_info import WindowInfo

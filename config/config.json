@@ -1,4 +1,7 @@
 {
+    "logging": {
+        "enabled": false
+    },
     "hotkey": {
         "show_hide": "Ctrl+Shift+Z"
     },
